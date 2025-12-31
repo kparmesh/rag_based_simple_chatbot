@@ -1,0 +1,70 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: rag-chatbot-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data/documents:/app/data/documents
+    environment:
+      - DATABASE_URL=postgresql://postgres:pass@db:5432/rag_chatbot
+      - DEBUG=True
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - db
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: rag-chatbot-frontend
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./chroma_db:/app/chroma_db
+      - ./data/documents:/app/data/documents
+    environment:
+      - API_BASE_URL=http://localhost:8000/api/v1
+      - DEBUG=True
+      - PYTHONDONTWRITEBYTECODE=1
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - backend
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+  db:
+    image: postgres:15-alpine
+    container_name: rag-chatbot-postgres
+    ports:
+      - "5439:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=pass
+      - POSTGRES_DB=rag_chatbot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - rag-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  chroma_db:
+    driver: local
+  documents:
+    driver: local
+
+networks:
+  rag-network:
+    driver: bridge
+
