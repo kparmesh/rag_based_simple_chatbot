@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# SQLite database files
+*.sqlite3
+db.sqlite3
+chroma_db/*
+
+# Environment Variables
+.env
+*.env
+venv/
+.venv/
+
+
+
+# VS Code
+.vscode/
+
+# Byte-compiled / optimized / DLL files
+*.pyc
+*.pyo
+*.pyd
+
+# Test results
+*.cover
+*.coverage
+*.cache
+*.pytest_cache
+.pytest_cache/
+
+
