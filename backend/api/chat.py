@@ -175,7 +175,7 @@ async def index_documents(db: Session = Depends(get_db)):
     db.query(DocumentModel).update({
         DocumentModel.status: "indexed",
         DocumentModel.chunk_count: len(chunks),
-        DocumentModel.file_size: os.path.getsize(DocumentModel.file_path)
+        DocumentModel.file_size: len(documents)
     })
     db.commit()
     
