@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Toolboxx Floating Chat</title>
+
+<style>
+:root {
+  --page-bg: #000000;
+  --page-text: #ffffff;
+
+  --chat-bg: #ffffff;
+  --chat-text: #000000;
+  --body-bg: #f5f7fa;
+  --border: #dddddd;
+
+  --header-bg: #007aff;
+  --user-bg: #007aff;
+
+  --ai-bg: #e9e9e9;
+  --user-text: #faf8f8;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background: #000000 !important;
+  color: #ffffff;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Floating button */
+#chat-launcher {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--header-bg);
+  color: white;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 999999;
+}
+
+/* Chat window */
+#chat-window {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  width: 380px;
+  height: 560px;
+  border-radius: 16px;
+  display: none;
+  flex-direction: column;
+  overflow: hidden;
+  z-index: 999999;
+  background: #ffffff !important;
+  opacity: 1 !important;
+}
+
+#chat-window.open { display: flex; }
+
+.chat-header {
+  background: var(--header-bg);
+  color: white;
+  padding: 14px;
+  display: flex;
+  justify-content: space-between;
+}
+
+.chat-body {
+  flex: 1;
+  padding: 14px;
+  background: var(--body-bg);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  opacity: 1 !important;
+}
+
+.msg {
+  max-width: 75%;
+  padding: 8px 12px;
+  border-radius: 12px;
+  font-size: 14px;
+  opacity: 1 !important;
+}
+
+.msg.ai {
+  background: #e9e9e9;
+  color: #000000 !important;
+}
+
+.msg.user {
+  background: var(--user-bg);
+  color: var(--user-text);
+  align-self: flex-end;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  opacity: 1 !important;
+}
+
+.option-btn {
+  background: #eef2ff;
+  border: 1px solid #dbe2ff;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  opacity: 1 !important;
+  color: #000000 !important;
+}
+
+.chat-input {
+  display: flex;
+  padding: 10px;
+  border-top: 1px solid var(--border);
+}
+
+.chat-input textarea {
+  flex: 1;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  color: var(--chat-text);
+}
+
+.chat-input button {
+  margin-left: 6px;
+  padding: 0 14px;
+  background: var(--header-bg);
+  color: white;
+  border: none;
+  border-radius: 6px;
+}
+</style>
+</head>
+
+<body>
+
+<h1 style="padding:40px;">🎉 Toolboxx Main Page</h1>
+<p style="padding-left:40px;">Powered by Toolboxx.</p>
+
+<div id="chat-launcher">💬</div>
+
+<div id="chat-window">
+  <div class="chat-header">
+    <span>Trust Inheritance AI</span>
+    <span id="close-btn">✕</span>
+  </div>
+
+  <div class="chat-body" id="chat-body"></div>
+
+  <div class="chat-input">
+    <textarea id="chat-input" rows="1" placeholder="Ask your question..."></textarea>
+    <button id="send-btn">Send</button>
+  </div>
+</div>
+
+
+<script>
+/* ============================
+   BACKEND CONFIG
+============================ */
+const API_BASE_URL = "http://localhost:8000/api/v1";
+
+/* ============================
+   CONVERSATION STATE
+============================ */
+let conversationId = localStorage.getItem("conversation_id") || null;
+
+// conversations structure:
+// {
+//   id: {
+//     title: "...",
+//     messages: [{role, text}]
+/* ============================ */
+let conversations = JSON.parse(localStorage.getItem("conversations") || "{}");
+
+
+/* ============================
+   TITLE GENERATION (Same as Streamlit)
+============================ */
+const MAX_TITLE_WORDS = 8;
+
+function generateTitleFromMessage(message) {
+  const words = message.trim().split(/\s+/);
+  const title = words.slice(0, MAX_TITLE_WORDS).join(" ");
+  return words.length > MAX_TITLE_WORDS ? title + "..." : title;
+}
+
+
+/* ============================
+   SPINNER
+============================ */
+function showThinking() {
+  const div = document.createElement("div");
+  div.className = "msg ai";
+  div.id = "thinking-indicator";
+  div.innerText = "Thinking...";
+  bodyEl.appendChild(div);
+  bodyEl.scrollTop = bodyEl.scrollHeight;
+}
+
+function hideThinking() {
+  const el = document.getElementById("thinking-indicator");
+  if (el) el.remove();
+}
+
+
+/* ============================
+   BACKEND CALL
+============================ */
+async function sendMessageToBackend(message) {
+  showThinking();
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/chat`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: message,
+        conversation_id: conversationId ? Number(conversationId) : null,
+        use_history: true
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error("Backend error");
+    }
+
+    const data = await response.json();
+
+    hideThinking();
+
+    // Save conversation ID if first time
+    if (!conversationId) {
+      conversationId = data.conversation_id;
+      localStorage.setItem("conversation_id", conversationId);
+    }
+
+    addMessage("ai", data.answer);
+
+    // Persist message
+    conversations[conversationId].messages.push({
+      role: "assistant",
+      text: data.answer
+    });
+
+    persistConversations();
+
+  } catch (err) {
+    hideThinking();
+    addMessage("ai", "⚠️ Sorry, I couldn’t reach the server. Please try again.");
+  }
+}
+
+function persistConversations() {
+  localStorage.setItem("conversations", JSON.stringify(conversations));
+}
+
+
+let guidedStep = "root";
+let guidedFlowActive = true;
+let messages = [];
+
+const launcher = document.getElementById("chat-launcher");
+const windowEl = document.getElementById("chat-window");
+const bodyEl = document.getElementById("chat-body");
+const inputEl = document.getElementById("chat-input");
+
+launcher.onclick = () => {
+  windowEl.classList.toggle("open");
+  if (messages.length === 0) showGreeting();
+};
+
+document.getElementById("close-btn").onclick =
+  () => windowEl.classList.remove("open");
+
+function addMessage(role, text) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.innerHTML = text;
+  bodyEl.appendChild(div);
+  bodyEl.scrollTop = bodyEl.scrollHeight;
+}
+
+
+function clearOptions() {
+  document.querySelectorAll(".options").forEach(o => o.remove());
+}
+
+function showGreeting() {
+  addMessage("ai",
+    "Hello! I am your Trust Inheritance Legal AI Assistant, How can I help you today!"
+  );
+  showOptions([
+    "Legal Document Support",
+    "Bereavement Support",
+    "Final Wishes Support"
+  ]);
+}
+
+function showOptions(opts) {
+  clearOptions();
+  const wrap = document.createElement("div");
+  wrap.className = "options";
+  opts.forEach(opt => {
+    const b = document.createElement("div");
+    b.className = "option-btn";
+    b.textContent = opt;
+    b.onclick = () => handleOption(opt);
+    wrap.appendChild(b);
+  });
+  bodyEl.appendChild(wrap);
+}
+
+function handleOption(opt) {
+  clearOptions();
+  addMessage("user", opt);
+
+  /* ROOT */
+  if (guidedStep === "root") {
+    if (opt === "Legal Document Support") {
+      guidedStep = "legal";
+      showOptions(["Will Writing", "Living Will", "Lasting Power of Attorney (LPA)"]);
+      return;
+    }
+    if (opt === "Bereavement Support") {
+      guidedStep = "bereavement";
+      showOptions([
+        "A Little Help",
+        "A Little More Help",
+        "Lots of Help",
+        "Hand It All Over",
+        "Online Grief Support"
+      ]);
+      return;
+    }
+    if (opt === "Final Wishes Support") {
+      guidedStep = "final";
+      showOptions([
+        "My Documents",
+        "Personal Messages",
+        "Funeral Wishes",
+        "Digital Legacy",
+        "Trusted People",
+        "Nags"
+      ]);
+      return;
+    }
+  }
+
+  /* LEGAL */
+  if (guidedStep === "legal" && opt === "Will Writing") {
+    guidedStep = "will";
+    showOptions(["Online", "Telephone", "Video"]);
+    return;
+  }
+
+  if (guidedStep === "will" && opt === "Online") {
+    addMessage("ai",
+      "👉 <a href='https://trustinheritance.toolboxx.co.uk/select-will' target='_blank'>Click here to start writing your will</a>"
+    );
+    guidedFlowActive = false;
+    return;
+  }
+
+  if (guidedStep === "legal" && opt === "Living Will") {
+    addMessage("ai",
+      "👉 <a href='https://trustinheritance.toolboxx.co.uk/living-will/5999/questionnaire/step/2' target='_blank'>Click here to start your Living Will</a>"
+    );
+    guidedFlowActive = false;
+    return;
+  }
+
+  if (guidedStep === "legal" && opt === "Lasting Power of Attorney (LPA)") {
+    guidedStep = "lpa";
+    showOptions(["Online", "Telephone", "Video"]);
+    return;
+  }
+
+  if (guidedStep === "lpa" && opt === "Online") {
+    addMessage("ai",
+      "👉 <a href='https://trustinheritance.toolboxx.co.uk/select-lpa' target='_blank'>Click here to start writing your LPA</a>"
+    );
+    guidedFlowActive = false;
+    return;
+  }
+
+  /* BEREAVEMENT */
+  if (guidedStep === "bereavement") {
+    const links = {
+      "A Little Help": "https://trustinheritance.toolboxx.co.uk/holder/10-steps",
+      "A Little More Help": "https://trustinheritance.toolboxx.co.uk/what-to-do-when-someone-dies/2808/questionnaire/step/11",
+      "Lots of Help": "https://trustinheritance.toolboxx.co.uk/payment/executor-toolkit-plus/5175",
+      "Hand It All Over": "https://trustinheritance.toolboxx.co.uk/estate-administration",
+      "Online Grief Support": "https://trustinheritance.toolboxx.co.uk/grief-support"
+    };
+    addMessage("ai", `👉 <a href='${links[opt]}' target='_blank'>Click here to check ${opt} support</a>`);
+    guidedFlowActive = false;
+  }
+
+  /* FINAL WISHES */
+  if (guidedStep === "final") {
+    addMessage("ai", "👉 Our Final Wishes services are coming soon.");
+    guidedFlowActive = false;
+  }
+}
+
+document.getElementById("send-btn").onclick = async () => {
+  const val = inputEl.value.trim();
+  if (!val) return;
+
+  inputEl.value = "";
+
+  // Exit guided flow
+  guidedFlowActive = false;
+
+  // Show user message
+  addMessage("user", val);
+
+  conversations[conversationId].messages.push({
+    role: "user",
+    text: val
+  });
+
+  persistConversations();
+
+  // 🔑 Call backend
+  await sendMessageToBackend(val);
+};
+</script>
+
+</body>
+</html>
+

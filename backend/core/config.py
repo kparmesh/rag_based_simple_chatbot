@@ -30,7 +30,7 @@ class Settings(BaseSettings):
     chunk_overlap: int = 100
     
     # CORS Settings
-    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000"]
+    cors_origins: List[str] = ["http://localhost:3000", "http://localhost:8000", "*"]
     
     class Config:
         env_file = ".env"
