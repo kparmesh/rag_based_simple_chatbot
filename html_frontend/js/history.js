@@ -255,16 +255,12 @@ const History = {
       // Clear loading message
       Chat.clearChat();
 
-      // Update state - sync both IDs
+      // Update state - set activeConversationId
       State.activeConversationId = id;
       State.conversationId = id;
       State.greetingRendered = true;
       State.exitGuidedFlow();
       State.guidedStep = "chat";
-
-      // Save to localStorage
-      localStorage.setItem(Config.STORAGE.ACTIVE_CONVERSATION_ID, id);
-      localStorage.setItem(Config.STORAGE.CONVERSATION_ID, id);
 
       // Load and display messages
       messages.forEach((msg) => {
@@ -349,4 +345,3 @@ const History = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = History;
 }
-

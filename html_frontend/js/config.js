@@ -11,7 +11,7 @@ const Config = {
     ENDPOINTS: {
       CHAT: "/chat",
       CONVERSATIONS: "/conversations",
-      CONVERSATION_MESSAGES: "/conversations/{id}/messages",
+      CONVERSATION_MESSAGES: "/chat/{id}/messages",
       CONVERSATION_DELETE: "/conversations/{id}"
     }
   },

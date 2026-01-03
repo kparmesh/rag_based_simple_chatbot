@@ -22,10 +22,8 @@ const State = {
    * Initialize state from localStorage
    */
   init() {
-    // Only load conversationId (for continuing the last conversation)
-    // Don't load activeConversationId on init - that should only be set when 
-    // a conversation is actually loaded from history during the session
     this.conversationId = localStorage.getItem(Config.STORAGE.CONVERSATION_ID) || null;
+    // Don't load activeConversationId on init - only set when loading from history
     this.activeConversationId = null;
     this.conversations = this.loadConversations();
   },
@@ -113,9 +111,7 @@ const State = {
     if (!this.conversations[id]) return false;
 
     this.activeConversationId = id;
-    this.conversationId = id;
     localStorage.setItem(Config.STORAGE.ACTIVE_CONVERSATION_ID, id);
-    localStorage.setItem(Config.STORAGE.CONVERSATION_ID, id);
     return true;
   },
 
@@ -160,4 +156,3 @@ State.init();
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = State;
 }
-

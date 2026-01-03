@@ -4,9 +4,6 @@
  * ================================================
  */
 
-// Toggle debug logs during development. Set to `true` to enable verbose logs.
-const DEBUG = false;
-
 const Chat = {
   // DOM Elements
   elements: {
@@ -222,6 +219,7 @@ const Chat = {
     this.elements.body.appendChild(div);
     this.scrollToBottom();
   },
+
   /**
    * Add thinking indicator
    */
@@ -379,4 +377,3 @@ const Chat = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Chat;
 }
-

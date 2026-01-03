@@ -4,6 +4,9 @@
  * ================================================
  */
 
+// Toggle debug logs during development. Set to `true` to enable verbose logs.
+const DEBUG = false;
+
 (function () {
   "use strict";
 
@@ -16,7 +19,7 @@
       History.init();
       Chat.init();
 
-      if (typeof DEBUG !== 'undefined' && DEBUG) console.log("Toolboxx Floating Chat initialized successfully");
+      if (DEBUG) console.log("Toolboxx Floating Chat initialized successfully");
     } catch (error) {
       console.error("Error initializing chat:", error);
     }
