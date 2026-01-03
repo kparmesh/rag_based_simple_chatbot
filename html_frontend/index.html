@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Toolboxx Floating Chat</title>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/styles.css" />
+  
+  <!-- Preconnect to API domain for faster connection -->
+  <link rel="preconnect" href="http://localhost:8000" />
+</head>
+
+<body>
+  <!-- Main Page Content -->
+  <h1 style="padding: 40px;">🎉 Toolboxx Main Page</h1>
+  <p style="padding-left: 40px;">Powered by Toolboxx.</p>
+
+  <!-- Chat Launcher Button -->
+  <div id="chat-launcher" aria-label="Open chat" role="button" tabindex="0">
+    💬
+  </div>
+
+  <!-- Chat Window -->
+  <div id="chat-window" role="dialog" aria-label="Chat window">
+    <!-- Chat Header -->
+    <div class="chat-header">
+      <span class="chat-header-title">Trust Inheritance AI</span>
+      <div class="chat-header-actions">
+        <span id="menu-btn" class="chat-header-btn" aria-label="Menu" role="button" tabindex="0">
+          ⋮
+        </span>
+        <span id="close-btn" class="chat-header-btn" aria-label="Close" role="button" tabindex="0">
+          ✕
+        </span>
+      </div>
+    </div>
+
+    <!-- History Sidebar -->
+    <div id="history-sidebar">
+      <div class="history-sidebar-header">
+        <span>Conversations</span>
+        <span id="close-history" class="history-sidebar-close" aria-label="Close history" role="button" tabindex="0">
+          ✕
+        </span>
+      </div>
+      <div id="history-list"></div>
+      <button id="new-chat-btn" class="new-chat-btn" aria-label="Start new chat" role="button" tabindex="0">
+        + New Chat
+      </button>
+    </div>
+
+    <!-- Chat Messages Area -->
+    <div class="chat-body" id="chat-body" role="log" aria-live="polite"></div>
+
+    <!-- Chat Input Area -->
+    <div class="chat-input">
+      <textarea
+        id="chat-input"
+        rows="1"
+        placeholder="Ask your question..."
+        aria-label="Chat message input"
+      ></textarea>
+      <button id="send-btn" aria-label="Send message">Send</button>
+    </div>
+  </div>
+
+  <!-- JavaScript Modules (loaded in order for dependency management) -->
+  <script src="js/config.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/chat.js"></script>
+  <script src="js/guided-flow.js"></script>
+  <script src="js/history.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
+

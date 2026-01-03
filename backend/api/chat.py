@@ -35,6 +35,12 @@ async def safe_context(docs: list) -> str:
         return "NO_RELEVANT_CONTEXT"
     return "\n\n".join(d.page_content for d in docs)
 
+def generate_title_from_message(message: str) -> str:
+    """Generate a title from a message by taking the first N words."""
+    words = message.strip().split()
+    title = " ".join(words[:8])
+    return title + "..." if len(words) > 8 else title
+
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
     request: ChatRequest,
@@ -46,7 +52,7 @@ async def chat(
     # Get or create conversation
     conversation_id = request.conversation_id
     if conversation_id is None:
-        conversation = Conversation(title=f"{conversation_id}.New Chat")
+        conversation = Conversation(title=generate_title_from_message(request.message))
         db.add(conversation)
         db.commit()
         db.refresh(conversation)
