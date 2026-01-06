@@ -20,7 +20,12 @@ const GuidedFlow = {
     if (State.greetingRendered) return;
 
     Chat.addMessage("ai", Config.GREETING.MESSAGE);
-    this.showOptions(Config.GREETING.OPTIONS);
+    this.showOptions([
+      "Legal Document Support",
+      "Bereavement Support",
+      "Final Wishes Support",
+      "Check Submissions"
+    ]);
     State.greetingRendered = true;
   },
 
@@ -126,6 +131,12 @@ const GuidedFlow = {
         "Trusted People",
         "Nags"
       ]);
+      return;
+    }
+
+    if (opt === "Check Submissions") {
+      // Handle check submissions - call Chat's handler
+      Chat.handleCheckSubmissions();
       return;
     }
   },

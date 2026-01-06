@@ -12,7 +12,14 @@ const Config = {
       CHAT: "/chat",
       CONVERSATIONS: "/conversations",
       CONVERSATION_MESSAGES: "/chat/{id}/messages",
-      CONVERSATION_DELETE: "/conversations/{id}"
+      CONVERSATION_DELETE: "/conversations/{id}",
+      AUTH: {
+        REGISTER: "/register",
+        LOGIN: "/login",
+        LOGOUT: "/logout",
+        ME: "/me"
+      },
+      SUBMISSIONS: "/submissions"
     }
   },
 
@@ -40,7 +47,9 @@ const Config = {
   STORAGE: {
     CONVERSATION_ID: "conversation_id",
     ACTIVE_CONVERSATION_ID: "activeConversationId",
-    CONVERSATIONS: "conversations"
+    CONVERSATIONS: "conversations",
+    AUTH_TOKEN: "auth_token",
+    CURRENT_USER: "current_user"
   },
 
   // Title Generation
@@ -54,7 +63,8 @@ const Config = {
     OPTIONS: [
       "Legal Document Support",
       "Bereavement Support",
-      "Final Wishes Support"
+      "Final Wishes Support",
+      "Check Submissions"
     ]
   },
 

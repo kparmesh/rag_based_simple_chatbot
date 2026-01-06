@@ -83,6 +83,172 @@ const Chat = {
   },
 
   /**
+   * Handle check submissions button click
+   */
+  async handleCheckSubmissions() {
+    // Exit guided flow
+    State.exitGuidedFlow();
+
+    // Check if user is logged in
+    if (!Auth.isLoggedIn()) {
+      // Close chat window
+      this.closeWindow();
+      // Show login modal
+      AuthUI.openModal('login');
+      return;
+    }
+
+    // Fetch and display submissions
+    await this.fetchAndDisplaySubmissions();
+  },
+
+  /**
+   * Fetch submissions from API and display them
+   */
+  async fetchAndDisplaySubmissions() {
+    // Show loading indicator
+    this.showSubmissionsLoading();
+
+    try {
+      const response = await fetch(
+        `${Config.API.BASE_URL}${Config.API.ENDPOINTS.SUBMISSIONS}`,
+        {
+          method: "GET",
+          headers: {
+            ...Auth.getAuthHeaders(),
+            "Content-Type": "application/json"
+          }
+        }
+      );
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired, show login modal
+          Auth.logout();
+          AuthUI.openModal('login');
+          this.addMessage("ai", "Your session has expired. Please login again to view your submissions.");
+          return;
+        }
+        throw new Error("Failed to fetch submissions");
+      }
+
+      const submissions = await response.json();
+      this.displaySubmissions(submissions);
+    } catch (err) {
+      if (DEBUG) console.error("[Chat] Error fetching submissions:", err);
+      this.showSubmissionsError(err.message || "Failed to load submissions. Please try again.");
+    }
+  },
+
+  /**
+   * Show loading indicator for submissions
+   */
+  showSubmissionsLoading() {
+    // Remove any existing submissions container
+    const existingContainer = document.querySelector(".submissions-container");
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    // Add loading indicator
+    const container = document.createElement("div");
+    container.className = "submissions-container";
+    container.innerHTML = `
+      <div class="submissions-loading">Loading your submissions...</div>
+    `;
+
+    this.elements.body.appendChild(container);
+    this.scrollToBottom();
+  },
+
+  /**
+   * Show error message for submissions
+   * @param {string} message - Error message
+   */
+  showSubmissionsError(message) {
+    // Remove any existing submissions container
+    const existingContainer = document.querySelector(".submissions-container");
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    // Add error message
+    const container = document.createElement("div");
+    container.className = "submissions-container";
+    container.innerHTML = `
+      <div class="submissions-error">${this.escapeHtml(message)}</div>
+    `;
+
+    this.elements.body.appendChild(container);
+    this.scrollToBottom();
+  },
+
+  /**
+   * Display submissions in chat
+   * @param {Array} submissions - Array of submission objects
+   */
+  displaySubmissions(submissions) {
+    // Remove any existing submissions container
+    const existingContainer = document.querySelector(".submissions-container");
+    if (existingContainer) {
+      existingContainer.remove();
+    }
+
+    const container = document.createElement("div");
+    container.className = "submissions-container";
+
+    if (!submissions || submissions.length === 0) {
+      container.innerHTML = `
+        <div class="submissions-header">Your Submissions</div>
+        <div class="submissions-empty">You haven't started any questionnaires yet.</div>
+      `;
+    } else {
+      let submissionsHtml = `
+        <div class="submissions-header">Your Submissions</div>
+        <div class="submissions-list">
+      `;
+
+      submissions.forEach(submission => {
+        const statusClass = submission.is_complete ? 'completed' : 'in-progress';
+        const statusIcon = submission.is_complete ? '✓' : '⏳';
+        const statusText = submission.is_complete ? 'Completed' : 'In Progress';
+        const stepText = submission.is_complete 
+          ? '' 
+          : `<span class="submission-step">Step ${submission.step}</span>`;
+
+        submissionsHtml += `
+          <div class="submission-item">
+            <div class="submission-title">${this.escapeHtml(submission.questionnaire_title)}</div>
+            <div class="submission-status ${statusClass}">
+              <span>${statusIcon}</span>
+              <span>${statusText}</span>
+            </div>
+            ${stepText}
+          </div>
+        `;
+      });
+
+      submissionsHtml += '</div>';
+      container.innerHTML = submissionsHtml;
+    }
+
+    this.elements.body.appendChild(container);
+    this.scrollToBottom();
+  },
+
+  /**
+   * Escape HTML to prevent XSS
+   * @param {string} text - Text to escape
+   * @returns {string} Escaped text
+   */
+  escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  },
+
+  /**
    * Toggle chat window visibility
    */
   async toggleWindow() {

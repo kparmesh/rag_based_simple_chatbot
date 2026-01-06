@@ -4,6 +4,8 @@ Main application entry point for the RAG Chat Bot.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from backend.api.chat import router as chat_router
+from backend.api.auth import router as auth_router
+from backend.api.submissions import router as submissions_router
 from backend.db.session import init_db
 from backend.core.config import settings
 from contextlib import asynccontextmanager
@@ -39,6 +41,8 @@ app.add_middleware(
 
 # Include routers
 app.include_router(chat_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(submissions_router, prefix="/api/v1")
 
 
 @app.get("/")

@@ -18,6 +18,9 @@ const State = {
   // Message history (current session)
   messages: [],
 
+  // User state
+  user: null,
+
   /**
    * Initialize state from localStorage
    */
@@ -26,6 +29,11 @@ const State = {
     // Don't load activeConversationId on init - only set when loading from history
     this.activeConversationId = null;
     this.conversations = this.loadConversations();
+    
+    // Load user from Auth module
+    if (typeof Auth !== 'undefined') {
+      this.user = Auth.getCurrentUser();
+    }
   },
 
   /**

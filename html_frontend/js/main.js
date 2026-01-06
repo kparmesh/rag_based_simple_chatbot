@@ -16,6 +16,8 @@ const DEBUG = false;
   function init() {
     try {
       // Initialize modules in order
+      Auth.init();
+      AuthUI.init();
       History.init();
       Chat.init();
 
