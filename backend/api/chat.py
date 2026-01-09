@@ -114,7 +114,6 @@ async def chat(
     return ChatResponse(
         answer=answer,
         conversation_id=conversation_id,
-        sources=None
     )
 
 
