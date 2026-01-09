@@ -38,13 +38,13 @@ const AuthUI = {
       container.innerHTML = `
         <button onclick="AuthUI.openModal('login')" style="
           padding: 10px 20px;
-          background: #007aff;
+          background: #4285F4;
           color: white;
           border: none;
           border-radius: 6px;
           cursor: pointer;
           font-size: 14px;
-        ">Login / Register</button>
+        ">LOG IN / SIGN UP</button>
       `;
     }
   },

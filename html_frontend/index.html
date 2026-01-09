@@ -10,15 +10,34 @@
   
   <!-- Preconnect to API domain for faster connection -->
   <link rel="preconnect" href="http://localhost:8000" />
+  
+  <!-- Internal Styles for Background and Layout -->
+  <style>
+    body {
+      background-image: url('static/homepage.png');
+      background-size: cover;
+      background-position: top center;
+      background-attachment: fixed;
+      background-repeat: no-repeat;
+      min-height: 100vh;
+      margin: 0;
+      padding: 0;
+    }
+
+    #main-page-auth {
+      position: fixed;
+      top: 25px;
+      right: 20px;
+      margin: 0;
+      padding: 0;
+      z-index: 999998;
+    }
+  </style>
 </head>
 
 <body>
-  <!-- Main Page Content -->
-  <h1 style="padding: 40px;">🎉 Toolboxx Main Page</h1>
-  <p style="padding-left: 40px;">Powered by Toolboxx.</p>
-
   <!-- User Info / Login Button (Main Page) -->
-  <div id="main-page-auth" style="padding-left: 40px; margin-top: 20px;">
+  <div id="main-page-auth">
     <!-- Content will be updated by JS based on auth state -->
   </div>
 
