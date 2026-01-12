@@ -84,10 +84,17 @@ def get_conversational_chain(retriever: BaseRetriever | None = None):
     def normalize_question(inputs: dict) -> str:
         return inputs["question"]
 
+    def get_chat_history(inputs: dict) -> str:
+        return inputs.get("chat_history", "")
+
+    def get_context(inputs: dict) -> list:
+        return retriever.invoke(inputs["question"])
+
     chain = (
         RunnablePassthrough.assign(
             question=RunnableLambda(normalize_question),
-            context=lambda x: retriever.invoke(x["question"]),
+            chat_history=RunnableLambda(get_chat_history),
+            context=RunnableLambda(get_context),
         )
         | CONVERSATIONAL_PROMPT
         | llm
@@ -102,7 +109,9 @@ def get_conversational_chain(retriever: BaseRetriever | None = None):
 # ---------------------------------------------------------
 def ask_question(
     question: str,
-    chain=None
+    chain=None,
+    context: str | None = None,
+    chat_history: str | None = None
 ) -> Tuple[str, List[Document]]:
     """
     Ask a single question using RAG.
@@ -114,7 +123,17 @@ def ask_question(
     else:
         sources = []
 
-    answer = chain.invoke({"question": question})
+    inputs = {"question": question}
+    
+    # Add context if provided (retrieved from chat.py)
+    if context is not None:
+        inputs["context"] = context
+    
+    # Add chat_history if provided (empty string for non-conversational mode)
+    if chat_history is not None:
+        inputs["chat_history"] = chat_history
+
+    answer = chain.invoke(inputs)
 
     return answer, sources
 
@@ -146,4 +165,3 @@ def conversational_chat(
     answer = chain.invoke(inputs)
 
     return answer
-

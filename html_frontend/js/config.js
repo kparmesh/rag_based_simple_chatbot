@@ -5,6 +5,9 @@
  */
 
 const Config = {
+  // Debug mode
+  DEBUG: true,
+
   // API Configuration
   API: {
     BASE_URL: "http://localhost:8000/api/v1",
@@ -13,6 +16,7 @@ const Config = {
       CONVERSATIONS: "/conversations",
       CONVERSATION_MESSAGES: "/chat/{id}/messages",
       CONVERSATION_DELETE: "/conversations/{id}",
+      USER_CONVERSATIONS: "/conversations/user/{user_id}",
       AUTH: {
         REGISTER: "/register",
         LOGIN: "/login",

@@ -19,7 +19,7 @@ const Auth = {
     this.currentUser = this.loadUser();
     this.isAuthenticated = !!this.token && !!this.currentUser;
     
-    if (DEBUG) console.log("[Auth] Initialized:", { isAuthenticated: this.isAuthenticated });
+    if (Config.DEBUG) console.log("[Auth] Initialized:", { isAuthenticated: this.isAuthenticated });
     
     return this.isAuthenticated;
   },
@@ -84,7 +84,7 @@ const Auth = {
       localStorage.setItem(Config.STORAGE.AUTH_TOKEN, this.token);
       this.saveUser(data.user);
 
-      if (DEBUG) console.log("[Auth] Login successful:", { user: data.user });
+      if (Config.DEBUG) console.log("[Auth] Login successful:", { user: data.user });
 
       return data;
     } catch (err) {
@@ -125,7 +125,7 @@ const Auth = {
       localStorage.setItem(Config.STORAGE.AUTH_TOKEN, this.token);
       this.saveUser(data.user);
 
-      if (DEBUG) console.log("[Auth] Registration successful:", { user: data.user });
+      if (Config.DEBUG) console.log("[Auth] Registration successful:", { user: data.user });
 
       return data;
     } catch (err) {
@@ -145,7 +145,7 @@ const Auth = {
     localStorage.removeItem(Config.STORAGE.AUTH_TOKEN);
     localStorage.removeItem(Config.STORAGE.CURRENT_USER);
 
-    if (DEBUG) console.log("[Auth] Logged out");
+    if (Config.DEBUG) console.log("[Auth] Logged out");
   },
 
   /**

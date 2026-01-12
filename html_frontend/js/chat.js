@@ -43,11 +43,11 @@ const Chat = {
    * Cache DOM elements for better performance
    */
   cacheElements() {
-    this.elements.window = document.getElementById("chat-window");
-    this.elements.body = document.getElementById("chat-body");
-    this.elements.input = document.getElementById("chat-input");
-    this.elements.sendBtn = document.getElementById("send-btn");
-    this.elements.launcher = document.getElementById("chat-launcher");
+    this.elements.window = document.getElementById("chatWidget");
+    this.elements.body = document.getElementById("chatMessages");
+    this.elements.input = document.getElementById("chatInput");
+    this.elements.sendBtn = document.querySelector(".send-btn");
+    this.elements.launcher = document.querySelector(".chat-bubble");
   },
 
   /**
@@ -126,7 +126,7 @@ const Chat = {
           // Token expired, show login modal
           Auth.logout();
           AuthUI.openModal('login');
-          this.addMessage("ai", "Your session has expired. Please login again to view your submissions.");
+          this.addMessage("assistant", "Your session has expired. Please login again to view your submissions.");
           return;
         }
         throw new Error("Failed to fetch submissions");
@@ -150,14 +150,16 @@ const Chat = {
       existingContainer.remove();
     }
 
-    // Add loading indicator
-    const container = document.createElement("div");
-    container.className = "submissions-container";
-    container.innerHTML = `
-      <div class="submissions-loading">Loading your submissions...</div>
+    // Add loading indicator as a message
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message assistant";
+    messageDiv.innerHTML = `
+      <div class="message-bubble submissions-container">
+        <div class="submissions-loading">Loading your submissions...</div>
+      </div>
     `;
 
-    this.elements.body.appendChild(container);
+    this.elements.body.appendChild(messageDiv);
     this.scrollToBottom();
   },
 
@@ -172,14 +174,16 @@ const Chat = {
       existingContainer.remove();
     }
 
-    // Add error message
-    const container = document.createElement("div");
-    container.className = "submissions-container";
-    container.innerHTML = `
-      <div class="submissions-error">${this.escapeHtml(message)}</div>
+    // Add error message as a message bubble
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message assistant";
+    messageDiv.innerHTML = `
+      <div class="message-bubble submissions-container submissions-error">
+        ${this.escapeHtml(message)}
+      </div>
     `;
 
-    this.elements.body.appendChild(container);
+    this.elements.body.appendChild(messageDiv);
     this.scrollToBottom();
   },
 
@@ -194,19 +198,21 @@ const Chat = {
       existingContainer.remove();
     }
 
-    const container = document.createElement("div");
-    container.className = "submissions-container";
+    // Create message container
+    const messageDiv = document.createElement("div");
+    messageDiv.className = "message assistant";
+    
+    let containerHtml = `
+      <div class="message-bubble submissions-container">
+        <div class="submissions-header">Your Submissions</div>
+    `;
 
     if (!submissions || submissions.length === 0) {
-      container.innerHTML = `
-        <div class="submissions-header">Your Submissions</div>
+      containerHtml += `
         <div class="submissions-empty">You haven't started any questionnaires yet.</div>
       `;
     } else {
-      let submissionsHtml = `
-        <div class="submissions-header">Your Submissions</div>
-        <div class="submissions-list">
-      `;
+      containerHtml += `<div class="submissions-list">`;
 
       submissions.forEach(submission => {
         const statusClass = submission.is_complete ? 'completed' : 'in-progress';
@@ -214,9 +220,9 @@ const Chat = {
         const statusText = submission.is_complete ? 'Completed' : 'In Progress';
         const stepText = submission.is_complete 
           ? '' 
-          : `<span class="submission-step">Step ${submission.step}</span>`;
+          : `<div class="submission-step">Step ${submission.step}</div>`;
 
-        submissionsHtml += `
+        containerHtml += `
           <div class="submission-item">
             <div class="submission-title">${this.escapeHtml(submission.questionnaire_title)}</div>
             <div class="submission-status ${statusClass}">
@@ -228,12 +234,76 @@ const Chat = {
         `;
       });
 
-      submissionsHtml += '</div>';
-      container.innerHTML = submissionsHtml;
+      containerHtml += `</div>`;
     }
 
-    this.elements.body.appendChild(container);
+    containerHtml += `</div>`;
+    messageDiv.innerHTML = containerHtml;
+
+    this.elements.body.appendChild(messageDiv);
     this.scrollToBottom();
+  },
+
+  /**
+   * Fetch user conversations from API
+   * @param {number} userId - User ID
+   * @param {number} skip - Number of conversations to skip (pagination)
+   * @param {number} limit - Number of conversations to fetch (pagination, default 3)
+   * @returns {Promise<Array>} Array of conversation objects
+   */
+  async fetchUserConversations(userId, skip = 0, limit = 3) {
+    const endpoint = Config.API.ENDPOINTS.USER_CONVERSATIONS.replace('{user_id}', userId);
+    const url = `${Config.API.BASE_URL}${endpoint}?skip=${skip}&limit=${limit}`;
+
+    const response = await fetch(
+      url,
+      {
+        method: "GET",
+        headers: {
+          ...Auth.getAuthHeaders(),
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        Auth.logout();
+        AuthUI.openModal('login');
+        throw new Error("Session expired");
+      }
+      throw new Error("Failed to fetch conversations");
+    }
+
+    return await response.json();
+  },
+
+  /**
+   * Fetch messages for a conversation from API
+   * @param {number} conversationId - Conversation ID
+   * @returns {Promise<Array>} Array of message objects
+   */
+  async fetchConversationMessages(conversationId) {
+    const endpoint = Config.API.ENDPOINTS.CONVERSATION_MESSAGES.replace('{id}', conversationId);
+    const url = `${Config.API.BASE_URL}${endpoint}`;
+
+    const response = await fetch(
+      url,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch conversation messages");
+    }
+
+    const data = await response.json();
+    // Handle both array response and wrapped response
+    return Array.isArray(data) ? data : (data.messages || []);
   },
 
   /**
@@ -254,10 +324,10 @@ const Chat = {
   async toggleWindow() {
     if (!this.elements.window) return;
 
-    this.elements.window.classList.toggle("open");
+    this.elements.window.classList.toggle("active");
 
     // Window is opening
-    if (this.elements.window.classList.contains("open")) {
+    if (this.elements.window.classList.contains("active")) {
       // Check if we have an active conversation to redirect to
       if (State.activeConversationId) {
         // Redirect to the active conversation
@@ -274,7 +344,7 @@ const Chat = {
    */
   closeWindow() {
     if (!this.elements.window) return;
-    this.elements.window.classList.remove("open");
+    this.elements.window.classList.remove("active");
     this.resetToNewChat();
   },
 
@@ -293,96 +363,28 @@ const Chat = {
     State.greetingRendered = false;
     
     // Show greeting if chat window is open
-    if (this.elements.window && this.elements.window.classList.contains("open")) {
+    if (this.elements.window && this.elements.window.classList.contains("active")) {
       GuidedFlow.showGreeting();
     }
   },
 
   /**
    * Add a message to the chat
-   * @param {string} role - Message role ('user' or 'ai')
+   * @param {string} role - Message role ('user' or 'assistant')
    * @param {string} text - Message text (HTML allowed)
    */
   addMessage(role, text) {
     if (!this.elements.body) return;
 
-    if (DEBUG) console.log(`[Chat] Adding ${role} message:`, (typeof text === 'string' ? text.substring(0, 50) : String(text)).replace(/\n/g, ' '));
+    const messageDiv = document.createElement("div");
+    messageDiv.className = `message ${role}`;
 
-    const div = document.createElement("div");
-    div.className = `msg ${role}`;
+    const bubble = document.createElement("div");
+    bubble.className = "message-bubble";
+    bubble.innerHTML = text || "";
 
-    // For AI messages, apply direct styles as fallback and sanitize HTML
-    if (role === "ai") {
-      // Apply inline styles directly to ensure visibility
-      div.style.background = "#e0e0e0";
-      div.style.color = "#000000";
-      div.style.display = "block";
-      div.style.visibility = "visible";
-      div.style.opacity = "1";
-
-      // Create a temporary container to parse the HTML
-      const temp = document.createElement("div");
-      temp.innerHTML = text || "";
-
-      // Sanitize nodes: remove dangerous tags, strip attributes, and force visible colors
-      const sanitizeNode = (el) => {
-        if (el.nodeType === 1) { // Element node
-          const tag = el.tagName.toLowerCase();
-
-          // Remove potentially dangerous / styling tags by replacing with their text content
-          const blacklist = [
-            'script', 'style', 'link', 'iframe', 'object', 'embed', 'svg', 'video', 'audio', 'form', 'input', 'button'
-          ];
-          if (blacklist.includes(tag)) {
-            const txt = document.createTextNode(el.textContent || '');
-            if (el.parentNode) el.parentNode.replaceChild(txt, el);
-            return;
-          }
-
-          // Remove all attributes except safe href on anchors
-          Array.from(el.attributes).forEach(attr => {
-            const name = attr.name.toLowerCase();
-            if (tag === 'a' && name === 'href') {
-              const val = el.getAttribute('href') || '';
-              // Block javascript: URIs
-              if (/^\s*javascript:/i.test(val)) {
-                el.removeAttribute('href');
-              }
-              // otherwise keep href
-            } else {
-              try { el.removeAttribute(attr.name); } catch (e) { /* ignore */ }
-            }
-          });
-
-          // Force inline visible text colors
-          try {
-            el.style.setProperty('color', '#000000', 'important');
-            el.style.setProperty('background', 'transparent', 'important');
-          } catch (e) { /* ignore */ }
-
-          // Recursively sanitize children (clone list because we may replace nodes)
-          Array.from(el.childNodes).forEach(child => sanitizeNode(child));
-        }
-      };
-
-      sanitizeNode(temp);
-      div.innerHTML = temp.innerHTML;
-      if (DEBUG) console.log(`[Chat] AI message sanitized and styles forced`);
-    } else {
-      // For user messages, use CSS classes
-      div.innerHTML = text;
-    }
-
-    // Verify the div has the correct classes and computed styles
-    try {
-      if (DEBUG) console.log(`[Chat] Message div classes:`, div.className);
-      if (DEBUG) console.log(`[Chat] Message div computed style - background:`, window.getComputedStyle(div).backgroundColor);
-      if (DEBUG) console.log(`[Chat] Message div computed style - color:`, window.getComputedStyle(div).color);
-    } catch (e) {
-      // window might not be available in some contexts
-    }
-
-    this.elements.body.appendChild(div);
+    messageDiv.appendChild(bubble);
+    this.elements.body.appendChild(messageDiv);
     this.scrollToBottom();
   },
 
@@ -393,9 +395,17 @@ const Chat = {
     if (!this.elements.body) return;
 
     const div = document.createElement("div");
-    div.className = "msg ai thinking-indicator";
+    div.className = "message assistant thinking-indicator";
     div.id = "thinking-indicator";
-    div.textContent = "Thinking...";
+    div.innerHTML = `
+      <div class="message-bubble">
+        <div class="thinking-dots">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+      </div>
+    `;
 
     this.elements.body.appendChild(div);
     this.scrollToBottom();
@@ -448,6 +458,7 @@ const Chat = {
       // For new conversations (activeConversationId is null), send null to let backend create
       // For loaded conversations (activeConversationId is set), use that ID
       const conversationId = State.activeConversationId || null;
+      const user_id = Auth.isLoggedIn() ? Auth.getCurrentUser().id : null;
 
       const response = await fetch(
         `${Config.API.BASE_URL}${Config.API.ENDPOINTS.CHAT}`,
@@ -457,7 +468,8 @@ const Chat = {
           body: JSON.stringify({
             message,
             conversation_id: conversationId ? Number(conversationId) : null,
-            use_history: true
+            use_history: true,
+            user_id
           })
         }
       );
@@ -477,17 +489,17 @@ const Chat = {
         State.conversationId = State.activeConversationId;
       }
 
-      this.addMessage("ai", data.answer);
+      this.addMessage("assistant", data.answer);
 
       // Persist message
       if (State.activeConversationId) {
-        State.addMessageToConversation("ai", data.answer);
+        State.addMessageToConversation("assistant", data.answer);
       }
 
       return data;
     } catch (err) {
       this.hideThinking();
-      this.addMessage("ai", "⚠️ Sorry, I couldn't reach the server. Please try again.");
+      this.addMessage("assistant", "Sorry, I couldn't reach the server. Please try again.");
       throw err;
     }
   },
@@ -543,3 +555,4 @@ const Chat = {
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = Chat;
 }
+

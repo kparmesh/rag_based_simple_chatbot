@@ -15,6 +15,7 @@ class ChatMessage(BaseModel):
 
 class ChatRequest(BaseModel):
     """Schema for chat request."""
+    user_id: Optional[str] = Field(None, description="User ID")
     message: str = Field(..., description="User's message")
     conversation_id: Optional[int] = Field(None, description="Conversation ID for continuity")
     use_history: bool = Field(True, description="Whether to use conversation history")
@@ -23,8 +24,7 @@ class ChatRequest(BaseModel):
 class ChatResponse(BaseModel):
     """Schema for chat response."""
     answer: str = Field(..., description="Assistant's response")
-    conversation_id: int = Field(..., description="Conversation ID")
-    sources: Optional[List[dict]] = Field(None, description="Source documents used")
+    conversation_id: Optional[int] = Field(None, description="Conversation ID")
 
 
 # Document schemas

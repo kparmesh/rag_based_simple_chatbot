@@ -14,7 +14,8 @@ class UserCreate(UserBase):
 
 class UserResponse(UserBase):
     """Schema for user response."""
-    id: int
+    id: str | None = None
+    full_name: str | None = None
     is_active: bool
     created_at: datetime
 

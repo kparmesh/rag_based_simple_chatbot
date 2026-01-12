@@ -11,13 +11,13 @@ class SubmissionBase(BaseModel):
 
 class SubmissionCreate(SubmissionBase):
     """Schema for creating a submission."""
-    user_id: int
+    user_id: str | None = None
 
 
 class SubmissionResponse(SubmissionBase):
     """Schema for submission response."""
     id: int
-    user_id: int
+    user_id: str | None = None
     created_at: datetime
     updated_at: datetime
 

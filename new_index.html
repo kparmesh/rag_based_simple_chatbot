@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Inheritance - Legal AI Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: #f5f5f5;
+        }
+
+        /* Website Header */
+        .website-header {
+            background: #002D5B;
+            color: white;
+            padding: 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            background: white;
+            padding: 15px 40px;
+            height: 100%;
+        }
+
+        .logo img {
+            height: 50px;
+            width: auto;
+        }
+
+        .auth-toggle {
+            background: #1E88E5;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-right: 40px;
+        }
+
+        /* Main Content */
+        .main-content {
+            padding: 0;
+            text-align: center;
+        }
+
+        .main-content-header {
+            background: white;
+            color: #002D5B;
+            padding: 40px;
+            margin: 0;
+        }
+
+        .main-content-header h1 {
+            color: #002D5B;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+
+        .main-content-header p {
+            color: #666;
+            font-size: 16px;
+        }
+
+        .main-content img {
+            width: 100vw;
+            max-width: 100vw;
+            margin: 0;
+            display: block;
+        }
+
+        /* Chat Widget */
+        .chat-bubble {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: #008B8B;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            transition: transform 0.2s;
+            z-index: 1000;
+        }
+
+        .chat-bubble:hover {
+            transform: scale(1.1);
+        }
+
+        .chat-bubble svg {
+            width: 30px;
+            height: 30px;
+            fill: white;
+        }
+
+        .chat-widget {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 380px;
+            height: 600px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+            display: none;
+            flex-direction: column;
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .chat-widget.active {
+            display: flex;
+        }
+
+        .chat-widget.expanded {
+            width: 90vw;
+            height: 90vh;
+            max-width: 1200px;
+            max-height: 800px;
+            bottom: 50%;
+            right: 50%;
+            transform: translate(50%, 50%);
+        }
+
+        /* Chat Header */
+        .chat-header {
+            background: #1E88E5;
+            color: white;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chat-header-title {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-header-title h3 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .chat-header-title small {
+            font-size: 10px;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .chat-header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .menu-btn, .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .menu-btn svg, .close-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        .menu-dropdown {
+            position: absolute;
+            top: 60px;
+            right: 50px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            padding: 8px 0;
+            display: none;
+            z-index: 10;
+        }
+
+        .menu-dropdown.active {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 12px 20px;
+            cursor: pointer;
+            color: #002D5B;
+            font-size: 14px;
+        }
+
+        .menu-item:hover {
+            background: #f5f5f5;
+        }
+
+        /* Chat Content */
+        .chat-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #fafafa;
+        }
+
+        /* Home Screen */
+        .home-screen, .messages-screen, .conversation-screen {
+            display: none;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .home-screen.active, .messages-screen.active, .conversation-screen.active {
+            display: flex;
+        }
+
+        .greeting {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .greeting h2 {
+            font-size: 24px;
+            color: #002D5B;
+            margin-bottom: 8px;
+        }
+
+        .greeting p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .recent-message-block {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .recent-message-block:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+        }
+
+        .recent-message-block h4 {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+
+        .recent-message-block p {
+            font-size: 14px;
+            color: #002D5B;
+            font-weight: 500;
+        }
+
+        .recent-message-block small {
+            font-size: 12px;
+            color: #999;
+        }
+
+        .action-button {
+            background: white;
+            border: 2px solid #008B8B;
+            color: #008B8B;
+            padding: 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            transition: all 0.2s;
+        }
+
+        .action-button:hover {
+            background: #008B8B;
+            color: white;
+        }
+
+        .action-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Messages Screen */
+        .message-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .message-item {
+            background: white;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.2s;
+        }
+
+        .message-item:hover {
+            transform: translateX(4px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #002D5B;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            flex-shrink: 0;
+        }
+
+        .message-info {
+            flex: 1;
+        }
+
+        .message-info h4 {
+            font-size: 14px;
+            color: #002D5B;
+            margin-bottom: 4px;
+        }
+
+        .message-info p {
+            font-size: 13px;
+            color: #666;
+        }
+
+        .no-messages {
+            text-align: center;
+            padding: 60px 20px;
+            color: #999;
+        }
+
+        /* Conversation Screen */
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+
+        .message {
+            margin-bottom: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .message.assistant {
+            align-items: flex-start;
+        }
+
+        .message.user {
+            align-items: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .message.assistant .message-bubble {
+            background: #e8e8e8;
+            color: #333;
+            border-bottom-left-radius: 4px;
+        }
+
+        .message.user .message-bubble {
+            background: #008B8B;
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .quick-action-btn {
+            background: white;
+            border: 1px solid #ddd;
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 13px;
+            color: #002D5B;
+            transition: all 0.2s;
+        }
+
+        .quick-action-btn:hover {
+            background: #008B8B;
+            color: white;
+            border-color: #008B8B;
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 16px;
+            background: white;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 8px;
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        .chat-input:focus {
+            border-color: #008B8B;
+        }
+
+        .send-btn {
+            width: 40px;
+            height: 40px;
+            background: #008B8B;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .send-btn:hover {
+            background: #006666;
+        }
+
+        .send-btn svg {
+            width: 20px;
+            height: 20px;
+            fill: white;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            display: flex;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 16px;
+            text-align: center;
+            cursor: pointer;
+            border: none;
+            background: none;
+            color: #999;
+            font-size: 13px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+
+        .nav-item.active {
+            color: #008B8B;
+        }
+
+        .nav-item svg {
+            width: 24px;
+            height: 24px;
+            fill: currentColor;
+        }
+
+        .send-message-btn {
+            background: #6B4FA1;
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 24px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            margin: 16px auto 0;
+            width: calc(100% - 32px);
+        }
+
+        .send-message-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Website Header -->
+    <div class="website-header">
+        <div class="logo">
+            <img src="static/logo.png" alt="Trust Inheritance">
+        </div>
+        <button class="auth-toggle" onclick="toggleAuth()">LOG IN / SIGN UP</button>
+    </div>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="main-content-header">
+            <h1>How can we help you today?</h1>
+            <p>Select a service below or chat with our AI assistant</p>
+        </div>
+        
+        <img src="static/all_trust_inheritance services.png" alt="Trust Inheritance Services">
+    </div>
+
+    <!-- Chat Bubble -->
+    <div class="chat-bubble" onclick="toggleChat()">
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
+    </div>
+
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <!-- Header -->
+        <div class="chat-header">
+            <div class="chat-header-title">
+                <h3>Trust Inheritance</h3>
+                <small>powered by toolboxx</small>
+            </div>
+            <div class="chat-header-actions">
+                <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="19" r="2"/>
+                    </svg>
+                </button>
+                <button class="close-btn" onclick="toggleChat()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="menu-dropdown" id="menuDropdown">
+                <div class="menu-item" onclick="expandChat()">Expand chat window</div>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div class="home-screen active" id="homeScreen">
+            <div class="chat-content">
+                <div class="greeting">
+                    <h2>👋 Hi there</h2>
+                    <p>How can we help?</p>
+                </div>
+                
+                <div id="recentMessageContainer" style="display: none;">
+                    <div class="recent-message-block" onclick="resumeConversation()">
+                        <h4>Recent message</h4>
+                        <p id="recentMessageText">To help you plan ahead, I can guide...</p>
+                        <small id="recentMessageTime">2w</small>
+                    </div>
+                </div>
+
+                <button class="action-button" onclick="startNewChat()">
+                    <span>Send us a message</span>
+                    <svg viewBox="0 0 24 24">
+                        <path fill="currentColor" d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item active" onclick="showScreen('home')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Home
+                </button>
+                <button class="nav-item" onclick="showScreen('messages')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Messages
+                </button>
+            </div>
+        </div>
+
+        <!-- Messages Screen -->
+        <div class="messages-screen" id="messagesScreen">
+            <div class="chat-content">
+                <h2 style="color: #002D5B; margin-bottom: 16px;">Messages</h2>
+                <div class="message-list" id="messageList">
+                    <div class="no-messages" id="noMessages">No messages yet</div>
+                </div>
+                <button class="send-message-btn" onclick="startNewChat()">
+                    <span>Send us a message</span>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="bottom-nav">
+                <button class="nav-item" onclick="showScreen('home')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                    </svg>
+                    Home
+                </button>
+                <button class="nav-item active" onclick="showScreen('messages')">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                    </svg>
+                    Messages
+                </button>
+            </div>
+        </div>
+
+        <!-- Conversation Screen -->
+        <div class="conversation-screen" id="conversationScreen">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask your question...">
+                <button class="send-btn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let chatHistory = [];
+        let currentConversation = [];
+        let isExpanded = false;
+
+        function toggleChat() {
+            const widget = document.getElementById('chatWidget');
+            widget.classList.toggle('active');
+        }
+
+        function toggleMenu() {
+            const dropdown = document.getElementById('menuDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function expandChat() {
+            const widget = document.getElementById('chatWidget');
+            const menuBtn = document.getElementById('menuBtn');
+            
+            widget.classList.toggle('expanded');
+            isExpanded = !isExpanded;
+            
+            toggleMenu();
+        }
+
+        function showScreen(screen) {
+            document.getElementById('homeScreen').classList.remove('active');
+            document.getElementById('messagesScreen').classList.remove('active');
+            document.getElementById('conversationScreen').classList.remove('active');
+
+            if (screen === 'home') {
+                document.getElementById('homeScreen').classList.add('active');
+                document.getElementById('menuBtn').style.display = 'none';
+            } else if (screen === 'messages') {
+                document.getElementById('messagesScreen').classList.add('active');
+                updateMessagesList();
+                document.getElementById('menuBtn').style.display = 'none';
+            } else if (screen === 'conversation') {
+                document.getElementById('conversationScreen').classList.add('active');
+                document.getElementById('menuBtn').style.display = 'flex';
+            }
+        }
+
+        function startNewChat() {
+            currentConversation = [];
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+
+            addMessage('assistant', 'Hello! I am your Trust Inheritance Legal AI Assistant, How can I help you today!');
+            
+            const quickActionsHTML = `
+                <div class="quick-actions">
+                    <button class="quick-action-btn" onclick="selectOption('Legal Document Support')">Legal Document Support</button>
+                    <button class="quick-action-btn" onclick="selectOption('Bereavement Support')">Bereavement Support</button>
+                    <button class="quick-action-btn" onclick="selectOption('Final Wishes Support')">Final Wishes Support</button>
+                    <button class="quick-action-btn" onclick="selectOption('Check Submissions')">Check Submissions</button>
+                </div>
+            `;
+            messagesContainer.innerHTML += quickActionsHTML;
+
+            showScreen('conversation');
+        }
+
+        function addMessage(sender, text) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.textContent = text;
+            
+            messageDiv.appendChild(bubble);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            currentConversation.push({ sender, text, timestamp: new Date() });
+        }
+
+        function selectOption(option) {
+            addMessage('user', option);
+            
+            setTimeout(() => {
+                addMessage('assistant', `I'd be happy to help you with ${option}. Could you please provide more details about what you need?`);
+                updateChatHistory();
+            }, 500);
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                addMessage('user', text);
+                input.value = '';
+                
+                setTimeout(() => {
+                    addMessage('assistant', 'Thank you for your message. Our team will review your request and get back to you shortly.');
+                    updateChatHistory();
+                }, 500);
+            }
+        }
+
+        function updateChatHistory() {
+            if (currentConversation.length > 0) {
+                const summary = currentConversation.find(msg => msg.sender === 'user');
+                if (summary) {
+                    chatHistory.unshift({
+                        text: summary.text,
+                        timestamp: new Date()
+                    });
+                    
+                    document.getElementById('recentMessageContainer').style.display = 'block';
+                    document.getElementById('recentMessageText').textContent = summary.text.substring(0, 40) + '...';
+                    document.getElementById('recentMessageTime').textContent = 'Just now';
+                }
+            }
+        }
+
+        function updateMessagesList() {
+            const messageList = document.getElementById('messageList');
+            const noMessages = document.getElementById('noMessages');
+            
+            if (chatHistory.length === 0) {
+                noMessages.style.display = 'block';
+                messageList.innerHTML = '<div class="no-messages">No messages yet</div>';
+            } else {
+                messageList.innerHTML = '';
+                chatHistory.forEach((msg, index) => {
+                    const messageItem = document.createElement('div');
+                    messageItem.className = 'message-item';
+                    messageItem.onclick = () => resumeConversation(index);
+                    messageItem.innerHTML = `
+                        <div class="message-avatar">J</div>
+                        <div class="message-info">
+                            <h4>MyIntent • AI Agent • ${getTimeAgo(msg.timestamp)}</h4>
+                            <p>${msg.text}</p>
+                        </div>
+                    `;
+                    messageList.appendChild(messageItem);
+                });
+            }
+        }
+
+        function resumeConversation(index = 0) {
+            showScreen('conversation');
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
+            return Math.floor(seconds / 604800) + 'w';
+        }
+
+        function toggleAuth() {
+            alert('Authentication functionality would be implemented here');
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('menuDropdown');
+            const menuBtn = document.getElementById('menuBtn');
+            if (!dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

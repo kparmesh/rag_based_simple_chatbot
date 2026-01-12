@@ -19,6 +19,7 @@ from backend.rag.retriever import add_documents_to_vectorstore, get_collection_s
 from backend.rag.retriever import similarity_search
 from backend.db.models import Conversation, Message, Document as DocumentModel
 from datetime import datetime, timezone
+import uuid
 import shutil
 import os
 from typing import List
@@ -26,20 +27,8 @@ from typing import List
 
 router = APIRouter()
 
-
 # In-memory storage for chains (in production, use Redis or similar)
 conversation_chains = {}
-
-async def safe_context(docs: list) -> str:
-    if not docs:
-        return "NO_RELEVANT_CONTEXT"
-    return "\n\n".join(d.page_content for d in docs)
-
-def generate_title_from_message(message: str) -> str:
-    """Generate a title from a message by taking the first N words."""
-    words = message.strip().split()
-    title = " ".join(words[:8])
-    return title + "..." if len(words) > 8 else title
 
 @router.post("/chat", response_model=ChatResponse)
 async def chat(
@@ -49,22 +38,61 @@ async def chat(
     """
     Chat endpoint for conversational question answering.
     """
-    # Get or create conversation
-    conversation_id = request.conversation_id
-    if conversation_id is None:
-        conversation = Conversation(title=generate_title_from_message(request.message))
-        db.add(conversation)
-        db.commit()
-        db.refresh(conversation)
-        conversation_id = conversation.id
-    else:
-        conversation = db.query(Conversation).filter(Conversation.id == conversation_id).first()
-        if not conversation:
-            raise HTTPException(status_code=404, detail="Conversation not found")
+
+    async def safe_context(docs: list) -> str:
+        if not docs:
+            return "NO_RELEVANT_CONTEXT"
+        return "\n\n".join(d.page_content for d in docs)
+
+    async def generate_title_from_message(message: str) -> str:
+        """Generate a title from a message by taking the first N words."""
+        words = message.strip().split()
+        title = " ".join(words[:8])
+        return title + "..." if len(words) > 8 else title
+
+
+    # Handle authenticated vs anonymous users
+    user_id = request.user_id
+    has_user = user_id is not None
     
-    # Get conversation history
-    messages = db.query(Message).filter(Message.conversation_id == conversation_id).order_by(Message.created_at).all()
-    chat_history = [(msg.role, msg.content) for msg in messages]
+    conversation_id = request.conversation_id
+    
+    # Initialize variables
+    conversation = None
+    chat_history = []
+    
+    if has_user:
+        # Get or create conversation for authenticated users
+        if conversation_id is None:
+            conversation = Conversation(
+                user_id=uuid.UUID(user_id),
+                title=await generate_title_from_message(request.message)
+            )
+            db.add(conversation)
+            db.flush()  # Get the ID without committing
+            conversation_id = conversation.id
+        else:
+            conversation = db.query(Conversation).filter(
+                Conversation.id == conversation_id,
+                Conversation.user_id == uuid.UUID(user_id)
+            ).first()
+            if not conversation:
+                raise HTTPException(status_code=404, detail="Conversation not found")
+        
+        # Get conversation history only if use_history is True
+        if request.use_history:
+            messages = db.query(Message).filter(
+                Message.conversation_id == conversation_id
+            ).order_by(Message.created_at).all()
+            chat_history = [(msg.role, msg.content) for msg in messages]
+    else:
+        # For anonymous users, skip conversation creation
+        # If conversation_id is provided but no user_id, we cannot access it
+        if conversation_id is not None:
+            raise HTTPException(
+                status_code=400, 
+                detail="Cannot access conversation without user authentication"
+            )
     
     # ---- retrieve documents FIRST ----
     vectorstore = get_vectorstore()
@@ -73,9 +101,9 @@ async def chat(
 
     # ---- block hallucinations early ----
     if context == "NO_RELEVANT_CONTEXT":
-        answer = "I don’t have this information right now... maybe in future I can help you better."
+        answer = "I don't have this information right now... maybe in future I can help you better."
     else:
-        if request.use_history:
+        if request.use_history and has_user:
             if conversation_id not in conversation_chains:
                 conversation_chains[conversation_id] = get_conversational_chain()
 
@@ -89,31 +117,37 @@ async def chat(
                 )
             })
         else:
-            answer, _ = ask_question(request.message)
+            answer, _ = ask_question(
+                request.message,
+                context=context,
+                chat_history=""
+            )
     
-    # Save user message
-    user_message = Message(
-        conversation_id=conversation_id,
-        role="user",
-        content=request.message
-    )
-    db.add(user_message)
-    
-    # Save assistant message
-    assistant_message = Message(
-        conversation_id=conversation_id,
-        role="assistant",
-        content=answer
-    )
-    db.add(assistant_message)
-    
-    # Update conversation
-    conversation.updated_at = datetime.now(timezone.utc)
-    db.commit()
+    # Save messages only for authenticated users
+    if has_user:
+        # Save user message
+        user_message = Message(
+            conversation_id=conversation_id,
+            role="user",
+            content=request.message
+        )
+        db.add(user_message)
+        
+        # Save assistant message
+        assistant_message = Message(
+            conversation_id=conversation_id,
+            role="assistant",
+            content=answer
+        )
+        db.add(assistant_message)
+        
+        # Update conversation
+        conversation.updated_at = datetime.now(timezone.utc)
+        db.commit()
     
     return ChatResponse(
         answer=answer,
-        conversation_id=conversation_id,
+        conversation_id=conversation_id if has_user else None,
     )
 
 
@@ -244,6 +278,42 @@ async def list_conversations(
     """
     conversations = db.query(Conversation).order_by(Conversation.updated_at.desc()).offset(skip).limit(limit).all()
     total = db.query(Conversation).count()
+    
+    return ConversationListResponse(
+        conversations=[
+            ConversationResponse(
+                id=c.id,
+                title=c.title,
+                created_at=c.created_at,
+                updated_at=c.updated_at,
+                message_count=len(c.messages)
+            )
+            for c in conversations
+        ],
+        total=total
+    )
+
+
+@router.get("/conversations/user/{user_id}", response_model=ConversationListResponse)
+async def get_user_conversations(
+    user_id: str,
+    skip: int = 0,
+    limit: int = 20,
+    db: Session = Depends(get_db)
+):
+    """
+    Get all conversations for a specific user by user_id.
+    """
+    try:
+        user_uuid = uuid.UUID(user_id)
+    except ValueError:
+        raise HTTPException(status_code=400, detail="Invalid user_id format")
+    
+    conversations = db.query(Conversation).filter(
+        Conversation.user_id == user_uuid
+    ).order_by(Conversation.updated_at.desc()).offset(skip).limit(limit).all()
+    
+    total = db.query(Conversation).filter(Conversation.user_id == user_uuid).count()
     
     return ConversationListResponse(
         conversations=[

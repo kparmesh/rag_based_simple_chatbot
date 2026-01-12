@@ -42,7 +42,7 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
     if user is None:
         raise credentials_exception
     return UserResponse(
-        id=user.id,
+        id=str(user.id),
         email=user.email,
         is_active=user.is_active,
         created_at=user.created_at
@@ -65,7 +65,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # Create new user - store password as plain text
     db_user = UserModel(
         email=user.email,
-        hashed_password=user.password  # Plain text password
+        password=user.password  # Plain text password
     )
     db.add(db_user)
     db.commit()
@@ -81,7 +81,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     return Token(
         access_token=access_token,
         user=UserResponse(
-            id=db_user.id,
+            id=str(db_user.id),
             email=db_user.email,
             is_active=db_user.is_active,
             created_at=db_user.created_at
@@ -96,7 +96,7 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     """
     user = db.query(UserModel).filter(UserModel.email == request.email).first()
     
-    if not user or request.password != user.hashed_password:
+    if not user or request.password != user.password:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid email or password",
@@ -112,15 +112,16 @@ async def login(request: LoginRequest, db: Session = Depends(get_db)):
     # Create access token
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": user.email},
+        data={"sub": user.email, "user_id": str(user.id)},
         expires_delta=access_token_expires
     )
     
     return Token(
         access_token=access_token,
         user=UserResponse(
-            id=user.id,
+            id=str(user.id),
             email=user.email,
+            full_name=user.full_name,
             is_active=user.is_active,
             created_at=user.created_at
         )

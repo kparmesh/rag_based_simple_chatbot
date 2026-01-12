@@ -43,7 +43,7 @@ def get_current_user_from_token(
     if user is None:
         raise credentials_exception
     return UserResponse(
-        id=user.id,
+        id=str(user.id),
         email=user.email,
         is_active=user.is_active,
         created_at=user.created_at
@@ -63,7 +63,19 @@ async def get_user_submissions(
         SubmissionModel.user_id == current_user.id
     ).order_by(SubmissionModel.updated_at.desc()).all()
     
-    return submissions
+    # Convert user_id from UUID to string for each submission
+    return [
+        SubmissionResponse(
+            id=sub.id,
+            user_id=str(sub.user_id),
+            questionnaire_title=sub.questionnaire_title,
+            step=sub.step,
+            is_complete=sub.is_complete,
+            created_at=sub.created_at,
+            updated_at=sub.updated_at
+        )
+        for sub in submissions
+    ]
 
 
 @router.get("/submissions/{submission_id}", response_model=SubmissionResponse)
@@ -86,5 +98,13 @@ async def get_submission(
             detail="Submission not found"
         )
     
-    return submission
+    return SubmissionResponse(
+        id=submission.id,
+        user_id=str(submission.user_id),
+        questionnaire_title=submission.questionnaire_title,
+        step=submission.step,
+        is_complete=submission.is_complete,
+        created_at=submission.created_at,
+        updated_at=submission.updated_at
+    )
 

@@ -1,154 +1,664 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Toolboxx Floating Chat</title>
-  
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="css/styles.css" />
-  
-  <!-- Preconnect to API domain for faster connection -->
-  <link rel="preconnect" href="http://localhost:8000" />
-  
-  <!-- Internal Styles for Background and Layout -->
-  <style>
-    body {
-      background-image: url('static/homepage.png');
-      background-size: cover;
-      background-position: top center;
-      background-attachment: fixed;
-      background-repeat: no-repeat;
-      min-height: 100vh;
-      margin: 0;
-      padding: 0;
-    }
-
-    #main-page-auth {
-      position: fixed;
-      top: 25px;
-      right: 20px;
-      margin: 0;
-      padding: 0;
-      z-index: 999998;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trust Inheritance - Legal AI Assistant</title>
+    <link rel="stylesheet" href="css/styles.css">
 </head>
-
 <body>
-  <!-- User Info / Login Button (Main Page) -->
-  <div id="main-page-auth">
-    <!-- Content will be updated by JS based on auth state -->
-  </div>
-
-  <!-- Chat Launcher Button -->
-  <div id="chat-launcher" aria-label="Open chat" role="button" tabindex="0">
-    💬
-  </div>
-
-  <!-- Login Modal (Main Page) -->
-  <div id="login-modal" class="modal" style="display: none;">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h2 id="modal-title">Login</h2>
-        <span class="modal-close" onclick="AuthUI.closeModal()">&times;</span>
-      </div>
-      
-      <!-- Login Form -->
-      <div id="login-form" class="auth-form">
-        <div class="form-group">
-          <label for="login-email">Email</label>
-          <input type="email" id="login-email" placeholder="Enter your email" required />
+    <!-- Website Header -->
+    <div class="website-header">
+        <div class="logo">
+            <img src="static/logo.png" alt="Trust Inheritance">
         </div>
-        <div class="form-group">
-          <label for="login-password">Password</label>
-          <input type="password" id="login-password" placeholder="Enter your password" required />
+        <div id="main-page-auth">
+            <button class="auth-toggle" onclick="toggleAuth()">LOG IN / SIGN UP</button>
         </div>
-        <div id="login-error" class="error-message"></div>
-        <button class="auth-btn primary" onclick="AuthUI.login()">Login</button>
-        <p class="auth-switch">
-          Don't have an account? <a href="#" onclick="AuthUI.showRegister(); return false;">Register</a>
-        </p>
-      </div>
-      
-      <!-- Register Form -->
-      <div id="register-form" class="auth-form" style="display: none;">
-        <div class="form-group">
-          <label for="register-email">Email</label>
-          <input type="email" id="register-email" placeholder="Enter your email" required />
-        </div>
-        <div class="form-group">
-          <label for="register-password">Password</label>
-          <input type="password" id="register-password" placeholder="Create a password" required />
-        </div>
-        <div class="form-group">
-          <label for="register-confirm">Confirm Password</label>
-          <input type="password" id="register-confirm" placeholder="Confirm your password" required />
-        </div>
-        <div id="register-error" class="error-message"></div>
-        <button class="auth-btn primary" onclick="AuthUI.register()">Register</button>
-        <p class="auth-switch">
-          Already have an account? <a href="#" onclick="AuthUI.showLogin(); return false;">Login</a>
-        </p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Chat Window -->
-  <div id="chat-window" role="dialog" aria-label="Chat window">
-    <!-- Chat Header -->
-    <div class="chat-header">
-      <span class="chat-header-title">Trust Inheritance AI</span>
-      <div class="chat-header-actions">
-        <span id="menu-btn" class="chat-header-btn" aria-label="Menu" role="button" tabindex="0">
-          ⋮
-        </span>
-        <span id="close-btn" class="chat-header-btn" aria-label="Close" role="button" tabindex="0">
-          ✕
-        </span>
-      </div>
     </div>
 
-    <!-- History Sidebar -->
-    <div id="history-sidebar">
-      <div class="history-sidebar-header">
-        <span>Conversations</span>
-        <span id="close-history" class="history-sidebar-close" aria-label="Close history" role="button" tabindex="0">
-          ✕
-        </span>
-      </div>
-      <div id="history-list"></div>
-      <button id="new-chat-btn" class="new-chat-btn" aria-label="Start new chat" role="button" tabindex="0">
-        + New Chat
-      </button>
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="main-content-header">
+            <h1>How can we help you today?</h1>
+            <p>Select a service below or chat with our AI assistant</p>
+        </div>
+        
+        <img src="static/all_trust_inheritance services.png" alt="Trust Inheritance Services">
     </div>
 
-    <!-- Chat Messages Area -->
-    <div class="chat-body" id="chat-body" role="log" aria-live="polite"></div>
-
-    <!-- Chat Input Area -->
-    <div class="chat-input">
-      <textarea
-        id="chat-input"
-        rows="1"
-        placeholder="Ask your question..."
-        aria-label="Chat message input"
-      ></textarea>
-      <div class="chat-input-actions">
-        <button id="send-btn" aria-label="Send message">Send</button>
-      </div>
+    <!-- Chat Bubble -->
+    <div class="chat-bubble" onclick="toggleChat()">
+        <svg viewBox="0 0 24 24">
+            <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+        </svg>
     </div>
-  </div>
 
-  <!-- JavaScript Modules (loaded in order for dependency management) -->
-  <script src="js/config.js"></script>
-  <script src="js/state.js"></script>
-  <script src="js/auth.js"></script>
-  <script src="js/auth-ui.js"></script>
-  <script src="js/chat.js"></script>
-  <script src="js/guided-flow.js"></script>
-  <script src="js/history.js"></script>
-  <script src="js/main.js"></script>
+    <!-- Chat Widget -->
+    <div class="chat-widget" id="chatWidget">
+        <!-- Header -->
+        <div class="chat-header">
+            <button class="back-btn" id="backBtn" onclick="goBack()" style="display: none;">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+                </svg>
+            </button>
+            <div class="chat-header-title">
+                <h3>Trust Inheritance</h3>
+                <small>powered by toolboxx</small>
+            </div>
+            <div class="chat-header-actions">
+                <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="5" r="2"/>
+                        <circle cx="12" cy="12" r="2"/>
+                        <circle cx="12" cy="19" r="2"/>
+                    </svg>
+                </button>
+                <button class="close-btn" onclick="toggleChat()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="menu-dropdown" id="menuDropdown">
+                <div class="menu-item" onclick="expandChat()">Expand chat window</div>
+            </div>
+        </div>
+
+        <!-- Home Screen -->
+        <div class="home-screen active" id="homeScreen">
+            <div class="chat-content">
+                <div class="home-content">
+                    <div class="greeting">
+                        <h2>👋 Hi there</h2>
+                        <p>How can we help?</p>
+                    </div>
+                    
+                    <div id="recentMessageContainer" style="display: none;">
+                        <div class="recent-message-block" onclick="resumeConversation()">
+                            <h4>Recent message</h4>
+                            <p id="recentMessageText">To help you plan ahead, I can guide...</p>
+                            <small id="recentMessageTime">2w</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="home-footer">
+                    <button class="send-message-btn" onclick="startNewChat()">
+                        <span>Send us a message</span>
+                        <svg viewBox="0 0 24 24">
+                            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Messages Screen -->
+        <div class="messages-screen" id="messagesScreen">
+            <div class="messages-header">
+                <h2>Messages</h2>
+            </div>
+            <div class="chat-content">
+                <div class="message-list" id="messageList">
+                    <div class="no-messages" id="noMessages">No messages yet</div>
+                </div>
+            </div>
+            <div class="messages-footer">
+                <button class="send-message-btn" onclick="startNewChat()">
+                    <span>Send us a message</span>
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Conversation Screen -->
+        <div class="conversation-screen" id="conversationScreen">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input-area">
+                <input type="text" class="chat-input" id="chatInput" placeholder="Ask your question...">
+                <button class="send-btn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Persistent Bottom Navigation -->
+        <div class="bottom-nav" id="bottomNav">
+            <button class="nav-item" id="navHome" onclick="showScreen('home')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/>
+                </svg>
+                Home
+            </button>
+            <button class="nav-item" id="navMessages" onclick="showScreen('messages')">
+                <svg viewBox="0 0 24 24">
+                    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+                </svg>
+                Messages
+            </button>
+        </div>
+    </div>
+
+    <!-- Authentication Modal -->
+    <div id="login-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center;">
+        <div style="background: white; padding: 20px; border-radius: 8px; width: 400px; max-width: 90%;">
+            <h2 id="modal-title">Login</h2>
+            <div id="login-form">
+                <input id="login-email" type="email" placeholder="Email" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                <input id="login-password" type="password" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                <button onclick="AuthUI.login()" style="width: 100%; padding: 10px; background: #4285F4; color: white; border: none; border-radius: 4px; cursor: pointer;">Login</button>
+                <div id="login-error" style="color: red; margin: 10px 0;"></div>
+                <a onclick="AuthUI.showRegister()" style="cursor: pointer; color: #4285F4;">Don't have an account? Register</a>
+            </div>
+            <div id="register-form" style="display: none;">
+                <input id="register-email" type="email" placeholder="Email" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                <input id="register-password" type="password" placeholder="Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                <input id="register-confirm" type="password" placeholder="Confirm Password" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px;">
+                <button onclick="AuthUI.register()" style="width: 100%; padding: 10px; background: #4285F4; color: white; border: none; border-radius: 4px; cursor: pointer;">Register</button>
+                <div id="register-error" style="color: red; margin: 10px 0;"></div>
+                <a onclick="AuthUI.showLogin()" style="cursor: pointer; color: #4285F4;">Already have an account? Login</a>
+            </div>
+            <button onclick="AuthUI.closeModal()" style="margin-top: 20px; padding: 10px; background: #6c757d; color: white; border: none; border-radius: 4px; cursor: pointer;">Close</button>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/state.js"></script>
+    <script src="js/auth.js"></script>
+    <script src="js/auth-ui.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/guided-flow.js"></script>
+    <script src="js/main.js"></script>
+    <script src="js/history.js"></script>
+
+    <script>
+        // Pagination state for conversations
+        const CONVERSATION_PAGE_SIZE = 20;
+        let conversationSkip = 0;
+        let conversationTotal = 0;
+        let allConversations = [];
+        let isLoadingMore = false;
+        let hasMoreConversations = true;
+
+        let currentConversation = [];
+        let isExpanded = false;
+
+        function toggleChat() {
+            const widget = document.getElementById('chatWidget');
+            const menuItem = document.querySelector('.menu-item');
+            
+            widget.classList.toggle('active');
+            
+            // If closing the chat, reset expanded state and menu text
+            if (!widget.classList.contains('active')) {
+                widget.classList.remove('expanded');
+                isExpanded = false;
+                if (menuItem) {
+                    menuItem.textContent = 'Expand chat window';
+                }
+            }
+        }
+
+        function toggleMenu() {
+            const dropdown = document.getElementById('menuDropdown');
+            dropdown.classList.toggle('active');
+        }
+
+        function expandChat() {
+            const widget = document.getElementById('chatWidget');
+            const menuItem = document.querySelector('.menu-item');
+            
+            widget.classList.toggle('expanded');
+            isExpanded = !isExpanded;
+            
+            // Update menu item text based on expanded state
+            if (isExpanded) {
+                menuItem.textContent = 'Collapse chat window';
+            } else {
+                menuItem.textContent = 'Expand chat window';
+            }
+            
+            toggleMenu();
+        }
+
+        function showScreen(screen) {
+            document.getElementById('homeScreen').classList.remove('active');
+            document.getElementById('messagesScreen').classList.remove('active');
+            document.getElementById('conversationScreen').classList.remove('active');
+            document.getElementById('backBtn').style.display = 'none';
+
+            // Hide footers by default
+            const homeFooter = document.querySelector('.home-footer');
+            const messagesFooter = document.querySelector('.messages-footer');
+            if (homeFooter) homeFooter.style.display = 'none';
+            if (messagesFooter) messagesFooter.style.display = 'none';
+
+            // Update bottom nav active state
+            document.getElementById('navHome').classList.remove('active');
+            document.getElementById('navMessages').classList.remove('active');
+            
+            // Show bottom nav by default (hide it for conversation screen)
+            const bottomNav = document.getElementById('bottomNav');
+            if (bottomNav) bottomNav.classList.remove('hidden');
+
+            if (screen === 'home') {
+                document.getElementById('homeScreen').classList.add('active');
+                document.getElementById('menuBtn').style.display = 'none';
+                document.getElementById('navHome').classList.add('active');
+                if (homeFooter) homeFooter.style.display = 'block';
+            } else if (screen === 'messages') {
+                document.getElementById('messagesScreen').classList.add('active');
+                // Fetch conversations based on login status
+                updateMessagesList();
+                document.getElementById('menuBtn').style.display = 'none';
+                document.getElementById('navMessages').classList.add('active');
+                if (messagesFooter) messagesFooter.style.display = 'block';
+            } else if (screen === 'conversation') {
+                document.getElementById('conversationScreen').classList.add('active');
+                document.getElementById('menuBtn').style.display = 'flex';
+                document.getElementById('backBtn').style.display = 'flex';
+                // Hide bottom nav when in conversation screen
+                if (bottomNav) bottomNav.classList.add('hidden');
+            }
+        }
+
+        function goBack() {
+            showScreen('home');
+        }
+
+        function startNewChat() {
+            currentConversation = [];
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.innerHTML = '';
+
+            addMessage('assistant', 'Hello! I am your Trust Inheritance Legal AI Assistant, How can I help you today!');
+
+            // Create quick actions dynamically, similar to guided-flow.js
+            const options = ["Legal Document Support", "Bereavement Support", "Final Wishes Support", "Check Submissions"];
+            const wrap = document.createElement("div");
+            wrap.className = "quick-actions";
+
+            options.forEach((opt) => {
+                const btn = document.createElement("button");
+                btn.className = "quick-action-btn";
+                btn.textContent = opt;
+                btn.onclick = () => selectOption(opt);
+                wrap.appendChild(btn);
+            });
+
+            messagesContainer.appendChild(wrap);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            showScreen('conversation');
+        }
+
+        function addMessage(sender, text) {
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${sender}`;
+
+            const bubble = document.createElement('div');
+            bubble.className = 'message-bubble';
+            bubble.innerHTML = text;
+
+            messageDiv.appendChild(bubble);
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            currentConversation.push({ sender, text, timestamp: new Date() });
+        }
+
+        function selectOption(option) {
+            addMessage('user', option);
+
+            // Handle options similar to guided-flow.js
+            if (option === "Legal Document Support") {
+                setTimeout(() => {
+                    addMessage('assistant', 'Please select the type of legal document support you need:');
+                    const subOptions = ["Will Writing", "Living Will", "Lasting Power of Attorney (LPA)"];
+                    const wrap = document.createElement("div");
+                    wrap.className = "quick-actions";
+                    subOptions.forEach((opt) => {
+                        const btn = document.createElement("button");
+                        btn.className = "quick-action-btn";
+                        btn.textContent = opt;
+                        btn.onclick = () => selectSubOption(opt);
+                        wrap.appendChild(btn);
+                    });
+                    document.getElementById('chatMessages').appendChild(wrap);
+                    wrap.style.marginTop = "12px";
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                }, 500);
+            } else if (option === "Bereavement Support") {
+                setTimeout(() => {
+                    addMessage('assistant', 'Please select the level of bereavement support you need:');
+                    const subOptions = ["A Little Help", "A Little More Help", "Lots of Help", "Hand It All Over", "Online Grief Support"];
+                    const wrap = document.createElement("div");
+                    wrap.className = "quick-actions";
+                    subOptions.forEach((opt) => {
+                        const btn = document.createElement("button");
+                        btn.className = "quick-action-btn";
+                        btn.textContent = opt;
+                        btn.onclick = () => selectBereavementOption(opt);
+                        wrap.appendChild(btn);
+                    });
+                    document.getElementById('chatMessages').appendChild(wrap);
+                    wrap.style.marginTop = "12px";
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                }, 500);
+            } else if (option === "Final Wishes Support") {
+                setTimeout(() => {
+                    addMessage('assistant', 'Please select the type of final wishes support you need:');
+                    const subOptions = ["My Documents", "Personal Messages", "Funeral Wishes", "Digital Legacy", "Trusted People", "Nags"];
+                    const wrap = document.createElement("div");
+                    wrap.className = "quick-actions";
+                    subOptions.forEach((opt) => {
+                        const btn = document.createElement("button");
+                        btn.className = "quick-action-btn";
+                        btn.textContent = opt;
+                        btn.onclick = () => selectFinalOption(opt);
+                        wrap.appendChild(btn);
+                    });
+                    document.getElementById('chatMessages').appendChild(wrap);
+                    wrap.style.marginTop = "12px";
+                    document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
+                }, 500);
+            } else if (option === "Check Submissions") {
+                // Handle check submissions - call Chat's handler which fetches from API
+                Chat.handleCheckSubmissions();
+            }
+        }
+
+        function selectSubOption(opt) {
+            addMessage('user', opt);
+            setTimeout(() => {
+                if (opt === "Will Writing") {
+                    addMessage('assistant', '👉 <a href="https://trustinheritance.toolboxx.co.uk/select-will" target="_blank">Click here to start writing your will</a>');
+                } else if (opt === "Living Will") {
+                    addMessage('assistant', '👉 <a href="https://trustinheritance.toolboxx.co.uk/living-will/5999/questionnaire/step/2" target="_blank">Click here to start your Living Will</a>');
+                } else if (opt === "Lasting Power of Attorney (LPA)") {
+                    addMessage('assistant', '👉 <a href="https://trustinheritance.toolboxx.co.uk/select-lpa" target="_blank">Click here to start writing your LPA</a>');
+                }
+            }, 500);
+        }
+
+        function selectBereavementOption(opt) {
+            addMessage('user', opt);
+            setTimeout(() => {
+                const links = {
+                    "A Little Help": "https://trustinheritance.toolboxx.co.uk/holder/10-steps",
+                    "A Little More Help": "https://trustinheritance.toolboxx.co.uk/what-to-do-when-someone-dies/2808/questionnaire/step/11",
+                    "Lots of Help": "https://trustinheritance.toolboxx.co.uk/payment/executor-toolkit-plus/5175",
+                    "Hand It All Over": "https://trustinheritance.toolboxx.co.uk/estate-administration",
+                    "Online Grief Support": "https://trustinheritance.toolboxx.co.uk/grief-support"
+                };
+                if (links[opt]) {
+                    addMessage('assistant', `👉 <a href='${links[opt]}' target='_blank'>Click here to check ${opt} support</a>`);
+                }
+            }, 500);
+        }
+
+        function selectFinalOption(opt) {
+            addMessage('user', opt);
+            setTimeout(() => {
+                const links = {
+                    "My Documents": "https://trustinheritance.toolboxx.co.uk/mydigifile",
+                    "Personal Messages": "https://trustinheritance.toolboxx.co.uk/payment/personal-message",
+                    "Funeral Wishes": "https://trustinheritance.toolboxx.co.uk/payment/what-to-do-when-planning-your-funeral",
+                    "Digital Legacy": "https://trustinheritance.toolboxx.co.uk/payment/digital-assets",
+                    "Trusted People": "https://trustinheritance.toolboxx.co.uk/profile#tab-trusted",
+                    "Nags": "https://trustinheritance.toolboxx.co.uk/nags"
+                };
+                if (links[opt]) {
+                    addMessage('assistant', `👉 <a href='${links[opt]}' target='_blank'>Click here to check ${opt} support</a>`);
+                }
+            }, 500);
+        }
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                addMessage('user', text);
+                input.value = '';
+                
+                // Show thinking indicator
+                const messagesContainer = document.getElementById('chatMessages');
+                const thinkingDiv = document.createElement('div');
+                thinkingDiv.className = 'message assistant';
+                thinkingDiv.id = 'thinking-indicator';
+                thinkingDiv.innerHTML = '<div class="message-bubble thinking-indicator"><div class="thinking-dots"><span></span><span></span><span></span></div></div>';
+                messagesContainer.appendChild(thinkingDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+                
+                try {
+                    // Call the backend API and get the response
+                    const data = await Chat.sendMessageToBackend(text);
+                    
+                    // Remove thinking indicator
+                    const thinkingEl = document.getElementById('thinking-indicator');
+                    if (thinkingEl) thinkingEl.remove();
+                    
+                    // Display the AI's answer
+                    if (data && data.answer) {
+                        addMessage('assistant', data.answer);
+                    }
+                } catch (err) {
+                    console.error('Error sending message:', err);
+                    // Remove thinking indicator on error
+                    const thinkingEl = document.getElementById('thinking-indicator');
+                    if (thinkingEl) thinkingEl.remove();
+                    // Error is already handled in Chat.sendMessageToBackend
+                }
+            }
+        }
+
+        async function updateMessagesList(reset = true) {
+            const messageList = document.getElementById('messageList');
+            const noMessages = document.getElementById('noMessages');
+            
+            console.log('updateMessagesList called with reset:', reset);
+            
+            // If elements don't exist, exit early
+            if (!messageList || !noMessages) {
+                console.log('Elements not found, exiting');
+                return;
+            }
+
+            // If user is logged in, fetch conversations from API
+            if (Auth.isLoggedIn() && Auth.currentUser) {
+                console.log('User is logged in, fetching conversations for user:', Auth.currentUser.id);
+                try {
+                    // If reset is true, start from the beginning
+                    if (reset) {
+                        conversationSkip = 0;
+                        allConversations = [];
+                        conversationTotal = 0;
+                        hasMoreConversations = true;
+                        messageList.innerHTML = '';
+                    }
+                    
+                    // Don't load if already loading or no more conversations
+                    if (isLoadingMore || !hasMoreConversations) return;
+                    isLoadingMore = true;
+                    
+                    const data = await Chat.fetchUserConversations(
+                        Auth.currentUser.id, 
+                        conversationSkip, 
+                        CONVERSATION_PAGE_SIZE
+                    );
+                    
+                    console.log('API response:', data);
+                    
+                    // Ensure conversations is always an array
+                    let conversations = [];
+                    if (Array.isArray(data)) {
+                        conversations = data;
+                        // Set hasMore based on whether we got a full page
+                        hasMoreConversations = conversations.length >= CONVERSATION_PAGE_SIZE;
+                    } else if (data && Array.isArray(data.conversations)) {
+                        conversations = data.conversations;
+                        conversationTotal = data.total || conversations.length;
+                        hasMoreConversations = allConversations.length + conversations.length < conversationTotal;
+                    }
+                    
+                    // Append new conversations to allConversations (avoid duplicates)
+                    const existingIds = new Set(allConversations.map(c => c.id));
+                    const newConversations = conversations.filter(c => !existingIds.has(c.id));
+                    allConversations = [...allConversations, ...newConversations];
+                    
+                    isLoadingMore = false;
+                    
+                    // Remove "no-messages" div if exists
+                    const existingNoMessages = messageList.querySelector('.no-messages');
+                    if (existingNoMessages) existingNoMessages.remove();
+                    
+                    if (allConversations.length === 0 && conversationSkip === 0) {
+                        noMessages.style.display = 'block';
+                        messageList.innerHTML = '<div class="no-messages">No conversations yet</div>';
+                    } else {
+                        noMessages.style.display = 'none';
+                        
+                        // Render new conversations only
+                        newConversations.forEach((conv) => {
+                            const messageItem = document.createElement('div');
+                            messageItem.className = 'message-item';
+                            messageItem.onclick = () => resumeConversation(conv.id);
+                            messageItem.innerHTML = `
+                                <div class="message-avatar">${conv.title ? conv.title.charAt(0).toUpperCase() : 'C'}</div>
+                                <div class="message-info">
+                                    <h4>${conv.title || 'Conversation'} • ${getTimeAgo(new Date(conv.created_at))}</h4>
+                                    <p>${conv.title || 'No messages'}</p>
+                                </div>
+                            `;
+                            messageList.appendChild(messageItem);
+                        });
+                        
+                        console.log('Loaded', allConversations.length, 'conversations. Has more:', hasMoreConversations);
+                    }
+                    
+                    // Update skip for next load
+                    conversationSkip += conversations.length;
+                } catch (err) {
+                    console.error('Error fetching conversations:', err);
+                    isLoadingMore = false;
+                    noMessages.style.display = 'block';
+                    messageList.innerHTML = '<div class="no-messages">Failed to load conversations</div>';
+                }
+            } else {
+                // User not logged in - show empty state
+                noMessages.style.display = 'block';
+                messageList.innerHTML = '<div class="no-messages">Please log in to view your conversation history</div>';
+            }
+        }
+
+        async function resumeConversation(conversationId) {
+            try {
+                // Show loading state
+                showScreen('conversation');
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                addMessage('assistant', 'Loading conversation...');
+
+                // Fetch messages from API
+                const messages = await Chat.fetchConversationMessages(conversationId);
+
+                if (!messages || messages.length === 0) {
+                    messagesContainer.innerHTML = '';
+                    addMessage('assistant', 'No messages in this conversation.');
+                    return;
+                }
+
+                // Clear loading message and display messages
+                messagesContainer.innerHTML = '';
+                messages.forEach((msg) => {
+                    addMessage(msg.role, msg.content);
+                });
+
+                // Update state - set activeConversationId
+                State.activeConversationId = conversationId;
+                State.conversationId = conversationId;
+                State.greetingRendered = true;
+                State.exitGuidedFlow();
+
+            } catch (error) {
+                console.error('Error loading conversation:', error);
+                const messagesContainer = document.getElementById('chatMessages');
+                messagesContainer.innerHTML = '';
+                addMessage('assistant', 'Failed to load conversation. Please try again.');
+            }
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd';
+            return Math.floor(seconds / 604800) + 'w';
+        }
+
+        function toggleAuth() {
+            AuthUI.openModal('login');
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        document.addEventListener('click', function(e) {
+            const dropdown = document.getElementById('menuDropdown');
+            const menuBtn = document.getElementById('menuBtn');
+            if (!dropdown.contains(e.target) && !menuBtn.contains(e.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
+
+        // Initialize Chat module
+        Chat.init();
+
+        // Add infinite scroll to message list
+        const messageListContainer = document.querySelector('.message-list');
+        if (messageListContainer) {
+            messageListContainer.addEventListener('scroll', debounce(function() {
+                const { scrollTop, scrollHeight, clientHeight } = messageListContainer;
+                // Load more when user is within 100px of the bottom
+                if (scrollHeight - scrollTop - clientHeight < 100) {
+                    if (Auth.isLoggedIn() && Auth.currentUser && hasMoreConversations && !isLoadingMore) {
+                        console.log('Infinite scroll triggered - loading more conversations');
+                        updateMessagesList(false);
+                    }
+                }
+            }, 200));
+        }
+
+        // Debounce utility function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Clear sessionStorage chat_history on page load to remove local storage
+        try {
+            sessionStorage.removeItem('chat_history');
+        } catch (e) {
+            console.error('Error clearing sessionStorage:', e);
+        }
+    </script>
 </body>
 </html>
-

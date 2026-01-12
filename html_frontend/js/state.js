@@ -22,10 +22,10 @@ const State = {
   user: null,
 
   /**
-   * Initialize state from localStorage
+   * Initialize state from sessionStorage
    */
   init() {
-    this.conversationId = localStorage.getItem(Config.STORAGE.CONVERSATION_ID) || null;
+    this.conversationId = sessionStorage.getItem(Config.STORAGE.CONVERSATION_ID) || null;
     // Don't load activeConversationId on init - only set when loading from history
     this.activeConversationId = null;
     this.conversations = this.loadConversations();
@@ -37,12 +37,12 @@ const State = {
   },
 
   /**
-   * Load conversations from localStorage
+   * Load conversations from sessionStorage
    * @returns {Object} Conversations object
    */
   loadConversations() {
     try {
-      return JSON.parse(localStorage.getItem(Config.STORAGE.CONVERSATIONS) || "{}");
+      return JSON.parse(sessionStorage.getItem(Config.STORAGE.CONVERSATIONS) || "{}");
     } catch (e) {
       console.error("Error loading conversations:", e);
       return {};
@@ -50,11 +50,11 @@ const State = {
   },
 
   /**
-   * Save conversations to localStorage
+   * Save conversations to sessionStorage
    */
   saveConversations() {
     try {
-      localStorage.setItem(Config.STORAGE.CONVERSATIONS, JSON.stringify(this.conversations));
+      sessionStorage.setItem(Config.STORAGE.CONVERSATIONS, JSON.stringify(this.conversations));
     } catch (e) {
       console.error("Error saving conversations:", e);
     }
@@ -84,7 +84,7 @@ const State = {
     // activeConversationId is only set when loading from history
     this.conversationId = id;
     this.saveConversations();
-    localStorage.setItem(Config.STORAGE.CONVERSATION_ID, id);
+    sessionStorage.setItem(Config.STORAGE.CONVERSATION_ID, id);
     return id;
   },
 
@@ -119,7 +119,7 @@ const State = {
     if (!this.conversations[id]) return false;
 
     this.activeConversationId = id;
-    localStorage.setItem(Config.STORAGE.ACTIVE_CONVERSATION_ID, id);
+    sessionStorage.setItem(Config.STORAGE.ACTIVE_CONVERSATION_ID, id);
     return true;
   },
 
@@ -139,6 +139,15 @@ const State = {
   },
 
   /**
+   * Clear only sessionStorage (keep JavaScript state)
+   */
+  clearStorageOnly() {
+    sessionStorage.removeItem(Config.STORAGE.CONVERSATION_ID);
+    sessionStorage.removeItem(Config.STORAGE.ACTIVE_CONVERSATION_ID);
+    sessionStorage.removeItem(Config.STORAGE.CONVERSATIONS);
+  },
+
+  /**
    * Clear all state
    */
   clear() {
@@ -150,11 +159,12 @@ const State = {
     this.guidedFlowActive = true;
     this.messages = [];
 
-    // Clear localStorage
-    localStorage.removeItem(Config.STORAGE.CONVERSATION_ID);
-    localStorage.removeItem(Config.STORAGE.ACTIVE_CONVERSATION_ID);
-    localStorage.removeItem(Config.STORAGE.CONVERSATIONS);
+    // Clear sessionStorage
+    sessionStorage.removeItem(Config.STORAGE.CONVERSATION_ID);
+    sessionStorage.removeItem(Config.STORAGE.ACTIVE_CONVERSATION_ID);
+    sessionStorage.removeItem(Config.STORAGE.CONVERSATIONS);
   }
+
 };
 
 // Initialize state on load

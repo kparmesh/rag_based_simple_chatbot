@@ -22,28 +22,33 @@ const AuthUI = {
     if (Auth.isLoggedIn() && Auth.currentUser) {
       container.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color: #666;">Welcome, <strong>${this.escapeHtml(Auth.currentUser.email)}</strong></span>
+          <span style="color: #666;">Welcome, <strong>${this.escapeHtml(Auth.currentUser.full_name || Auth.currentUser.email)}</strong></span>
           <button onclick="AuthUI.logout()" style="
-            padding: 8px 16px;
-            background: #dc3545;
+            padding: 12px 24px;
+            background: #1E88E5;
             color: white;
             border: none;
             border-radius: 6px;
             cursor: pointer;
             font-size: 14px;
+            margin-right: 40px;
           ">Logout</button>
         </div>
       `;
     } else {
       container.innerHTML = `
         <button onclick="AuthUI.openModal('login')" style="
-          padding: 10px 20px;
-          background: #4285F4;
+          background: #1E88E5;
           color: white;
           border: none;
-          border-radius: 6px;
+          padding: 12px 24px;
+          border-radius: 5px;
           cursor: pointer;
-          font-size: 14px;
+          font-size: 13px;
+          font-weight: 600;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+          margin-right: 40px;
         ">LOG IN / SIGN UP</button>
       `;
     }
@@ -149,7 +154,17 @@ const AuthUI = {
       this.closeModal();
       this.updateMainPageAuth();
       State.user = Auth.getCurrentUser();
-      if (DEBUG) console.log("[AuthUI] Login successful");
+      
+      // Clear all session storage to start fresh session after login
+      State.clear();
+      sessionStorage.clear();
+      
+      // Also clear chat display if it exists
+      if (typeof Chat !== 'undefined' && Chat.clearChat) {
+        Chat.clearChat();
+      }
+      
+      if (Config.DEBUG) console.log("[AuthUI] Login successful");
     } catch (err) {
       this.showLoginError(err.message || "Login failed. Please try again.");
     }
@@ -183,7 +198,17 @@ const AuthUI = {
       this.closeModal();
       this.updateMainPageAuth();
       State.user = Auth.getCurrentUser();
-      if (DEBUG) console.log("[AuthUI] Registration successful");
+      
+      // Clear all session storage to start fresh session after registration
+      State.clear();
+      sessionStorage.clear();
+      
+      // Also clear chat display if it exists
+      if (typeof Chat !== 'undefined' && Chat.clearChat) {
+        Chat.clearChat();
+      }
+      
+      if (Config.DEBUG) console.log("[AuthUI] Registration successful");
     } catch (err) {
       this.showRegisterError(err.message || "Registration failed. Please try again.");
     }
@@ -195,8 +220,18 @@ const AuthUI = {
   logout() {
     Auth.logout();
     State.user = null;
+    
+    // Clear all state and sessionStorage
+    State.clear();
+    sessionStorage.clear();
+    
+    // Also clear chat display if it exists
+    if (typeof Chat !== 'undefined' && Chat.clearChat) {
+      Chat.clearChat();
+    }
+    
     this.updateMainPageAuth();
-    if (DEBUG) console.log("[AuthUI] Logout successful");
+    if (Config.DEBUG) console.log("[AuthUI] Logout successful");
   },
 
   /**

@@ -8,11 +8,11 @@ from backend.db.session import engine, SessionLocal
 
 # Fake user data
 FAKE_USERS = [
-    {"email": "john.doe@example.com", "password": "password123"},
-    {"email": "jane.smith@example.com", "password": "password123"},
-    {"email": "bob.wilson@example.com", "password": "password123"},
-    {"email": "alice.brown@example.com", "password": "password123"},
-    {"email": "charlie.johnson@example.com", "password": "password123"},
+    {"email": "john.doe@example.com", "password": "password123", "first_name": "John", "last_name": "Doe", "username": "johndoe"},
+    {"email": "jane.smith@example.com", "password": "password123", "first_name": "Jane", "last_name": "Smith", "username": "janesmith"},
+    {"email": "bob.wilson@example.com", "password": "password123", "first_name": "Bob", "last_name": "Wilson", "username": "bobwilson"},
+    {"email": "alice.brown@example.com", "password": "password123", "first_name": "Alice", "last_name": "Brown", "username": "alicebrown"},
+    {"email": "charlie.johnson@example.com", "password": "password123", "first_name": "Charlie", "last_name": "Johnson", "username": "charliejohnson"},
 ]
 
 # Fake questionnaire titles
@@ -73,7 +73,10 @@ def seed_fake_data(force: bool = False):
         for user_data in FAKE_USERS:
             user = User(
                 email=user_data["email"],
-                hashed_password=user_data["password"]  # Plain text password as per existing code
+                password=user_data["password"],  # Plain text password as per existing code
+                first_name=user_data.get("first_name"),
+                last_name=user_data.get("last_name"),
+                username=user_data.get("username"),
             )
             db.add(user)
             created_users.append(user)
