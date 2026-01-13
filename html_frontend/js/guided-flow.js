@@ -39,11 +39,11 @@ const GuidedFlow = {
     if (!Chat.elements.body) return;
 
     const wrap = document.createElement("div");
-    wrap.className = "options";
+    wrap.className = "quick-actions";
 
     opts.forEach((opt) => {
-      const btn = document.createElement("div");
-      btn.className = "option-btn";
+      const btn = document.createElement("button");
+      btn.className = "quick-action-btn";
       btn.textContent = opt;
       btn.onclick = () => this.handleOption(opt);
       wrap.appendChild(btn);

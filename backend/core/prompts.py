@@ -12,7 +12,7 @@ SYSTEM_PROMPT = """
     - DO NOT ask for clarification.
     - Use ONLY the provided context and chat history.
     - If the answer is not present, say:
-    "I don't have this information right now... maybe in future I can help you better."
+    I don't have this information right now... maybe in future I can help you better.
 
     Chat History:
     {chat_history}

@@ -14,6 +14,15 @@ const Chat = {
     launcher: null
   },
 
+  // Constants
+  NO_CONTEXT_MESSAGE: "I don't have this information right now... maybe in future I can help you better.",
+  GREETING_OPTIONS: [
+    "Legal Document Support",
+    "Bereavement Support",
+    "Final Wishes Support",
+    "Check Submissions"
+  ],
+
   /**
    * Debug helper: inject an array of messages into the chat (simulate history load)
    * Usage from browser console after page load: Chat.debugInjectMessages([{role:'ai', content:'Hello'}])
@@ -307,6 +316,38 @@ const Chat = {
   },
 
   /**
+   * Delete a conversation from API
+   * @param {number} conversationId - Conversation ID
+   * @returns {Promise<void>}
+   */
+  async deleteConversation(conversationId) {
+    const endpoint = Config.API.ENDPOINTS.CONVERSATION_DELETE.replace('{id}', conversationId);
+    const url = `${Config.API.BASE_URL}${endpoint}`;
+
+    const response = await fetch(
+      url,
+      {
+        method: "DELETE",
+        headers: {
+          ...Auth.getAuthHeaders(),
+          "Content-Type": "application/json"
+        }
+      }
+    );
+
+    if (!response.ok) {
+      if (response.status === 401) {
+        Auth.logout();
+        AuthUI.openModal('login');
+        throw new Error("Session expired");
+      }
+      throw new Error("Failed to delete conversation");
+    }
+
+    return await response.json();
+  },
+
+  /**
    * Escape HTML to prevent XSS
    * @param {string} text - Text to escape
    * @returns {string} Escaped text
@@ -398,12 +439,10 @@ const Chat = {
     div.className = "message assistant thinking-indicator";
     div.id = "thinking-indicator";
     div.innerHTML = `
-      <div class="message-bubble">
-        <div class="thinking-dots">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
+      <div class="thinking-dots">
+        <span></span>
+        <span></span>
+        <span></span>
       </div>
     `;
 
@@ -490,6 +529,13 @@ const Chat = {
       }
 
       this.addMessage("assistant", data.answer);
+
+      // Check if AI couldn't answer - show greeting options again
+      if (data.answer === Chat.NO_CONTEXT_MESSAGE) {
+        // Reset guided flow to root so the options work correctly
+        GuidedFlow.reset();
+        GuidedFlow.showOptions(Chat.GREETING_OPTIONS);
+      }
 
       // Persist message
       if (State.activeConversationId) {
