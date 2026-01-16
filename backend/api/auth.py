@@ -74,7 +74,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     # Create access token
     access_token_expires = timedelta(minutes=settings.access_token_expire_minutes)
     access_token = create_access_token(
-        data={"sub": db_user.email},
+        data={"sub": db_user.email, "user_id": str(db_user.id)},
         expires_delta=access_token_expires
     )
     

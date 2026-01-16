@@ -18,7 +18,6 @@ const DEBUG = false;
       // Initialize modules in order
       Auth.init();
       AuthUI.init();
-      History.init();
       Chat.init();
 
       if (DEBUG) console.log("Toolboxx Floating Chat initialized successfully");
@@ -40,7 +39,6 @@ const DEBUG = false;
     State: State,
     Chat: Chat,
     GuidedFlow: GuidedFlow,
-    History: History,
 
     // Convenience methods
     open: () => Chat.toggleWindow(),

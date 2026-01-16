@@ -5,6 +5,9 @@ from datetime import datetime
 class UserBase(BaseModel):
     """Base user schema."""
     email: EmailStr
+    first_name: str | None = None
+    last_name: str | None = None
+    username: str | None = None
 
 
 class UserCreate(UserBase):

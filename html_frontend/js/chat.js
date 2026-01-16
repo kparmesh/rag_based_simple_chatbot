@@ -371,12 +371,52 @@ const Chat = {
     if (this.elements.window.classList.contains("active")) {
       // Check if we have an active conversation to redirect to
       if (State.activeConversationId) {
-        // Redirect to the active conversation
-        await History.loadConversation(State.activeConversationId);
+        // Load the active conversation
+        await this.loadConversation(State.activeConversationId);
       } else if (!State.greetingRendered) {
         // No active conversation and greeting not shown - show greeting
         GuidedFlow.showGreeting();
       }
+    }
+  },
+
+  /**
+   * Load a conversation and its messages (local implementation replacing History.loadConversation)
+   * @param {number} id - Conversation ID
+   */
+  async loadConversation(id) {
+    try {
+      // Show loading state
+      this.clearChat();
+      this.addMessage("assistant", "Loading conversation...");
+
+      // Fetch messages from API
+      const messages = await this.fetchConversationMessages(id);
+
+      if (!messages || messages.length === 0) {
+        this.clearChat();
+        this.addMessage("assistant", "No messages in this conversation.");
+        return;
+      }
+
+      // Clear loading message
+      this.clearChat();
+
+      // Update state - set activeConversationId
+      State.activeConversationId = id;
+      State.conversationId = id;
+      State.greetingRendered = true;
+      State.exitGuidedFlow();
+      State.guidedStep = "chat";
+
+      // Load and display messages
+      messages.forEach((msg) => {
+        this.addMessage(msg.role, msg.content);
+      });
+    } catch (error) {
+      console.error("Error loading conversation:", error);
+      this.clearChat();
+      this.addMessage("assistant", "Failed to load conversation. Please try again.");
     }
   },
 

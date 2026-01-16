@@ -22,7 +22,7 @@ const AuthUI = {
     if (Auth.isLoggedIn() && Auth.currentUser) {
       container.innerHTML = `
         <div style="display: flex; align-items: center; gap: 12px;">
-          <span style="color: #666;">Welcome, <strong>${this.escapeHtml(Auth.currentUser.full_name || Auth.currentUser.email)}</strong></span>
+          <span style="color: #fcfcfcff;">Welcome, <strong>${this.escapeHtml(Auth.currentUser.full_name || Auth.currentUser.email)}</strong></span>
           <button onclick="AuthUI.logout()" style="
             padding: 12px 24px;
             background: #1E88E5;

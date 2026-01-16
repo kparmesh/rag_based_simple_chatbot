@@ -34,17 +34,6 @@
         </svg>
     </div>
 
-    <!-- History Sidebar -->
-    <div class="history-sidebar" id="history-sidebar">
-        <div class="history-header">
-            <h3>Conversation History</h3>
-            <button class="history-close" id="close-history">×</button>
-        </div>
-        <div class="history-list" id="history-list">
-            <div class="history-loading">Loading conversations...</div>
-        </div>
-    </div>
-
     <!-- Chat Widget -->
     <div class="chat-widget" id="chatWidget">
         <!-- Header -->
@@ -59,11 +48,6 @@
                 <small>powered by toolboxx</small>
             </div>
             <div class="chat-header-actions">
-                <button class="history-btn" id="historyBtn" onclick="History.openSidebar()" title="Conversation History">
-                    <svg viewBox="0 0 24 24" width="20" height="20" fill="white">
-                        <path d="M13 3c-4.97 0-9 4.03-9 9H1l3.89 3.89.07.14L9 12H6c0-3.87 3.13-7 7-7s7 3.13 7 7-3.13 7-7 7c-1.93 0-3.68-.79-4.94-2.06l-1.42 1.42C8.27 19.99 10.51 21 13 21c4.97 0 9-4.03 9-9s-4.03-9-9-9zm-1 5v5l4.28 2.54.72-1.21-3.5-2.08V8H12z"/>
-                    </svg>
-                </button>
                 <button class="menu-btn" id="menuBtn" onclick="toggleMenu()">
                     <svg viewBox="0 0 24 24">
                         <circle cx="12" cy="5" r="2"/>
@@ -189,7 +173,6 @@
     <script src="js/auth-ui.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/guided-flow.js"></script>
-    <script src="js/history.js"></script>
     <script src="js/main.js"></script>
 
     <script>
@@ -269,8 +252,14 @@
                 if (homeFooter) homeFooter.style.display = 'block';
             } else if (screen === 'messages') {
                 document.getElementById('messagesScreen').classList.add('active');
-                // Fetch conversations based on login status
-                updateMessagesList();
+                // Reset all state variables to force fresh API call
+                conversationSkip = 0;
+                allConversations = [];
+                conversationTotal = 0;
+                hasMoreConversations = true;
+                isLoadingMore = false;
+                // Fetch conversations based on login status - always force fresh fetch
+                updateMessagesList(true);
                 document.getElementById('menuBtn').style.display = 'none';
                 document.getElementById('navMessages').classList.add('active');
                 if (messagesFooter) messagesFooter.style.display = 'block';
@@ -479,31 +468,39 @@
             const messageList = document.getElementById('messageList');
             const noMessages = document.getElementById('noMessages');
             
-            console.log('updateMessagesList called with reset:', reset);
+            console.log('updateMessagesList called with reset:', reset, 'isLoadingMore:', isLoadingMore);
             
-            // If elements don't exist, exit early
-            if (!messageList || !noMessages) {
-                console.log('Elements not found, exiting');
+            // If messageList element doesn't exist, exit early
+            if (!messageList) {
+                console.log('messageList element not found, exiting');
                 return;
             }
 
+            // Reset state variables if reset is true
+            if (reset) {
+                conversationSkip = 0;
+                allConversations = [];
+                conversationTotal = 0;
+                hasMoreConversations = true;
+                isLoadingMore = false;
+                messageList.innerHTML = '<div class="no-messages" id="noMessages">Loading conversations...</div>';
+            }
+            
+            // Get the noMessages element after potential reset
+            const noMessagesEl = document.getElementById('noMessages');
+            
+            // Don't load if already loading or no more conversations
+            if (isLoadingMore || !hasMoreConversations) {
+                console.log('Early exit - isLoadingMore:', isLoadingMore, 'hasMoreConversations:', hasMoreConversations);
+                return;
+            }
+            
+            isLoadingMore = true;
+            
             // If user is logged in, fetch conversations from API
             if (Auth.isLoggedIn() && Auth.currentUser) {
                 console.log('User is logged in, fetching conversations for user:', Auth.currentUser.id);
                 try {
-                    // If reset is true, start from the beginning
-                    if (reset) {
-                        conversationSkip = 0;
-                        allConversations = [];
-                        conversationTotal = 0;
-                        hasMoreConversations = true;
-                        messageList.innerHTML = '';
-                    }
-                    
-                    // Don't load if already loading or no more conversations
-                    if (isLoadingMore || !hasMoreConversations) return;
-                    isLoadingMore = true;
-                    
                     const data = await Chat.fetchUserConversations(
                         Auth.currentUser.id, 
                         conversationSkip, 
@@ -512,11 +509,12 @@
                     
                     console.log('API response:', data);
                     
-                    // Ensure conversations is always an array
+                    isLoadingMore = false;
+                    
+                    // Handle the response
                     let conversations = [];
                     if (Array.isArray(data)) {
                         conversations = data;
-                        // Set hasMore based on whether we got a full page
                         hasMoreConversations = conversations.length >= CONVERSATION_PAGE_SIZE;
                     } else if (data && Array.isArray(data.conversations)) {
                         conversations = data.conversations;
@@ -524,25 +522,16 @@
                         hasMoreConversations = allConversations.length + conversations.length < conversationTotal;
                     }
                     
-                    // Append new conversations to allConversations (avoid duplicates)
-                    const existingIds = new Set(allConversations.map(c => c.id));
-                    const newConversations = conversations.filter(c => !existingIds.has(c.id));
-                    allConversations = [...allConversations, ...newConversations];
+                    // Update allConversations
+                    allConversations = conversations;
                     
-                    isLoadingMore = false;
+                    // Clear the loading message and render conversations
+                    messageList.innerHTML = '';
                     
-                    // Remove "no-messages" div if exists
-                    const existingNoMessages = messageList.querySelector('.no-messages');
-                    if (existingNoMessages) existingNoMessages.remove();
-                    
-                    if (allConversations.length === 0 && conversationSkip === 0) {
-                        noMessages.style.display = 'block';
+                    if (allConversations.length === 0) {
                         messageList.innerHTML = '<div class="no-messages">No conversations yet</div>';
                     } else {
-                        noMessages.style.display = 'none';
-                        
-                        // Render new conversations only
-                        newConversations.forEach((conv) => {
+                        allConversations.forEach((conv) => {
                             const messageItem = document.createElement('div');
                             messageItem.className = 'message-item';
                             messageItem.dataset.id = conv.id;
@@ -557,21 +546,19 @@
                             `;
                             messageList.appendChild(messageItem);
                         });
-                        
-                        console.log('Loaded', allConversations.length, 'conversations. Has more:', hasMoreConversations);
                     }
                     
-                    // Update skip for next load
-                    conversationSkip += conversations.length;
+                    conversationSkip = allConversations.length;
+                    console.log('Loaded', allConversations.length, 'conversations');
                 } catch (err) {
                     console.error('Error fetching conversations:', err);
                     isLoadingMore = false;
-                    noMessages.style.display = 'block';
                     messageList.innerHTML = '<div class="no-messages">Failed to load conversations</div>';
                 }
             } else {
                 // User not logged in - show empty state
-                noMessages.style.display = 'block';
+                console.log('User not logged in');
+                isLoadingMore = false;
                 messageList.innerHTML = '<div class="no-messages">Please log in to view your conversation history</div>';
             }
         }
@@ -708,3 +695,4 @@
     </script>
 </body>
 </html>
+

@@ -8,11 +8,8 @@ from backend.db.session import engine, SessionLocal
 
 # Fake user data
 FAKE_USERS = [
-    {"email": "john.doe@example.com", "password": "password123", "first_name": "John", "last_name": "Doe", "username": "johndoe"},
-    {"email": "jane.smith@example.com", "password": "password123", "first_name": "Jane", "last_name": "Smith", "username": "janesmith"},
-    {"email": "bob.wilson@example.com", "password": "password123", "first_name": "Bob", "last_name": "Wilson", "username": "bobwilson"},
-    {"email": "alice.brown@example.com", "password": "password123", "first_name": "Alice", "last_name": "Brown", "username": "alicebrown"},
-    {"email": "charlie.johnson@example.com", "password": "password123", "first_name": "Charlie", "last_name": "Johnson", "username": "charliejohnson"},
+    {"email": "jds-p@outlook.com","first_name": "Jonathan","last_name": "Stirzaker-Philips","username": "jphilips","password": "password123"},
+    {"email": "jackmiller160587@aol.com","first_name": "John","last_name": "and Alison Miller","username": "john&alison","password": "password123"},
 ]
 
 # Fake questionnaire titles
